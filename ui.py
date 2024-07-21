@@ -33,7 +33,7 @@ class WinGUI(Tk):
         self.cooldown_input_w = self.__cooldown_input_w( self.coodown_zone_frame) 
         self.cooldown_zone_button = self.__cooldown_zone_button( self.coodown_zone_frame) 
     def __win(self):
-        self.title("Tkinter布局助手")
+        self.title("Hekili Rotation Bot")
         # 设置窗口大小、居中
         width = 342
         height = 381
