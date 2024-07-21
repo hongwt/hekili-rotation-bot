@@ -1,0 +1,19 @@
+# 全局配置变量
+DEBUG = True
+
+# WOW窗口的名称
+WOW_WINDOW_NAME = '魔兽世界'
+
+# Hekili技能快捷键区域
+# 游戏窗口截图 978, 740
+ABILITY_KEY_X = 978
+ABILITY_KEY_Y = 740
+ABILITY_KEY_H = 15
+ABILITY_KEY_W = 10
+
+# Hekili技能冷却时间区域
+# 游戏窗口截图 950, 760
+ABILITY_COOLDOWN_X = 950
+ABILITY_COOLDOWN_Y = 760
+ABILITY_COOLDOWN_H = 30
+ABILITY_COOLDOWN_W = 20

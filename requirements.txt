@@ -1,0 +1,4 @@
+torch>=1.10.2
+pytorch-lightning~=1.6.5
+timm~=0.6.7
+nltk
