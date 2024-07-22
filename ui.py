@@ -11,32 +11,46 @@ class WinGUI(Tk):
     def __init__(self):
         super().__init__()
         self.__win()
-        self.tk_button_lyvdnkur = self.__tk_button_lyvdnkur(self)
-        self.key_zone_frame = self.__key_zone_frame(self)
-        self.key_label_x = self.__key_label_x( self.key_zone_frame) 
-        self.key_input_x = self.__key_input_x( self.key_zone_frame) 
-        self.key_label_y = self.__key_label_y( self.key_zone_frame) 
-        self.key_input_y = self.__key_input_y( self.key_zone_frame) 
-        self.key_label_h = self.__key_label_h( self.key_zone_frame) 
-        self.key_input_h = self.__key_input_h( self.key_zone_frame) 
-        self.key_label_w = self.__key_label_w( self.key_zone_frame) 
-        self.key_input_w = self.__key_input_w( self.key_zone_frame) 
-        self.key_zone_button = self.__key_zone_button( self.key_zone_frame) 
-        self.coodown_zone_frame = self.__coodown_zone_frame(self)
-        self.cooldown_label_x = self.__cooldown_label_x( self.coodown_zone_frame) 
-        self.cooldown_input_x = self.__cooldown_input_x( self.coodown_zone_frame) 
-        self.cooldown_label_y = self.__cooldown_label_y( self.coodown_zone_frame) 
-        self.cooldown_input_y = self.__cooldown_input_y( self.coodown_zone_frame) 
-        self.cooldown_label_h = self.__cooldown_label_h( self.coodown_zone_frame) 
-        self.cooldown_input_h = self.__cooldown_input_h( self.coodown_zone_frame) 
-        self.cooldown_label_w = self.__cooldown_label_w( self.coodown_zone_frame) 
-        self.cooldown_input_w = self.__cooldown_input_w( self.coodown_zone_frame) 
-        self.cooldown_zone_button = self.__cooldown_zone_button( self.coodown_zone_frame) 
+        self.tk_label_window_name = self.__tk_label_window_name(self)
+        self.tk_select_box_window_name = self.__tk_select_box_window_name(self)
+        self.tk_button_set_hekili_zone = self.__tk_button_set_hekili_zone(self)
+        self.tk_canvas_hekili_zone = self.__tk_canvas_hekili_zone(self)
+        self.tk_button_start = self.__tk_button_start(self)
+        self.tk_frame_hekili_zone = self.__tk_frame_hekili_zone(self)
+        self.tk_label_hekili = self.__tk_label_hekili( self.tk_frame_hekili_zone) 
+        self.tk_label_hekili_x = self.__tk_label_hekili_x( self.tk_frame_hekili_zone) 
+        self.tk_input_hekili_x = self.__tk_input_hekili_x( self.tk_frame_hekili_zone) 
+        self.tk_label_hekili_y = self.__tk_label_hekili_y( self.tk_frame_hekili_zone) 
+        self.tk_input_hekili_y = self.__tk_input_hekili_y( self.tk_frame_hekili_zone) 
+        self.tk_label_hekili_w = self.__tk_label_hekili_w( self.tk_frame_hekili_zone) 
+        self.tk_input_hekili_w = self.__tk_input_hekili_w( self.tk_frame_hekili_zone) 
+        self.tk_label_hekili_h = self.__tk_label_hekili_h( self.tk_frame_hekili_zone) 
+        self.tk_input_hekili_h = self.__tk_input_hekili_h( self.tk_frame_hekili_zone) 
+        self.tk_frame_ability_key_zone = self.__tk_frame_ability_key_zone(self)
+        self.tk_label_ability_key = self.__tk_label_ability_key( self.tk_frame_ability_key_zone)
+        self.tk_label_ability_key_x = self.__tk_label_ability_key_x( self.tk_frame_ability_key_zone) 
+        self.tk_input_ability_key_x = self.__tk_input_ability_key_x( self.tk_frame_ability_key_zone) 
+        self.tk_label_ability_key_y = self.__tk_label_ability_key_y( self.tk_frame_ability_key_zone) 
+        self.tk_input_ability_key_y = self.__tk_input_ability_key_y( self.tk_frame_ability_key_zone) 
+        self.tk_label_ability_key_w = self.__tk_label_ability_key_w( self.tk_frame_ability_key_zone) 
+        self.tk_input_ability_key_w = self.__tk_input_ability_key_w( self.tk_frame_ability_key_zone) 
+        self.tk_label_ability_key_h = self.__tk_label_ability_key_h( self.tk_frame_ability_key_zone) 
+        self.tk_input_ability_key_h = self.__tk_input_ability_key_h( self.tk_frame_ability_key_zone) 
+        self.tk_frame_ability_cooldown_zone = self.__tk_frame_ability_cooldown_zone(self)
+        self.tk_label_ability_cooldown = self.__tk_label_ability_cooldown( self.tk_frame_ability_cooldown_zone) 
+        self.tk_label_ability_cooldown_x = self.__tk_label_ability_cooldown_x( self.tk_frame_ability_cooldown_zone) 
+        self.tk_input_ability_cooldown_x = self.__tk_input_ability_cooldown_x( self.tk_frame_ability_cooldown_zone) 
+        self.tk_label_ability_cooldown_y = self.__tk_label_ability_cooldown_y( self.tk_frame_ability_cooldown_zone) 
+        self.tk_input_ability_cooldown_y = self.__tk_input_ability_cooldown_y( self.tk_frame_ability_cooldown_zone) 
+        self.tk_label_ability_cooldown_w = self.__tk_label_ability_cooldown_w( self.tk_frame_ability_cooldown_zone) 
+        self.tk_input_ability_cooldown_w = self.__tk_input_ability_cooldown_w( self.tk_frame_ability_cooldown_zone) 
+        self.tk_label_ability_cooldown_h = self.__tk_label_ability_cooldown_h( self.tk_frame_ability_cooldown_zone) 
+        self.tk_input_ability_cooldown_h = self.__tk_input_ability_cooldown_h( self.tk_frame_ability_cooldown_zone) 
     def __win(self):
-        self.title("Hekili Rotation Bot")
+        self.title("Hekili辅助")
         # 设置窗口大小、居中
-        width = 342
-        height = 381
+        width = 335
+        height = 450
         screenwidth = self.winfo_screenwidth()
         screenheight = self.winfo_screenheight()
         geometry = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
@@ -77,90 +91,147 @@ class WinGUI(Tk):
             hbar = Scrollbar(master, orient="horizontal")
             self.h_scrollbar(hbar, widget, x, y, w, h, pw, ph)
         self.scrollbar_autohide(vbar, hbar, widget)
-    def __tk_button_lyvdnkur(self,parent):
+    def __tk_label_window_name(self,parent):
+        label = Label(parent,text="游戏窗口：",anchor="center", )
+        label.place(x=10, y=9, width=71, height=30)
+        return label
+    def __tk_select_box_window_name(self,parent):
+        cb = Combobox(parent, state="readonly", )
+        cb['values'] = ("列表框","Python","Tkinter Helper")
+        cb.place(x=102, y=9, width=219, height=30)
+        return cb
+    def __tk_button_set_hekili_zone(self,parent):
+        btn = Button(parent, text="设置截图区域（Hekili）", takefocus=False,)
+        btn.place(x=10, y=59, width=314, height=30)
+        return btn
+    def __tk_canvas_hekili_zone(self,parent):
+        canvas = Canvas(parent,bg="#aaa")
+        canvas.place(x=10, y=100, width=315, height=115)
+        return canvas
+    def __tk_button_start(self,parent):
         btn = Button(parent, text="开始", takefocus=False,)
-        btn.place(x=10, y=292, width=319, height=59)
+        btn.place(x=10, y=380, width=315, height=59)
         return btn
-    def __key_zone_frame(self,parent):
+    def __tk_frame_hekili_zone(self,parent):
         frame = Frame(parent,)
-        frame.place(x=4, y=22, width=330, height=74)
+        frame.place(x=10, y=225, width=315, height=35)
         return frame
-    def __key_label_x(self,parent):
-        label = Label(parent,text="X:",anchor="center", )
-        label.place(x=5, y=44, width=25, height=20)
+    def __tk_label_hekili(self,parent):
+        label = Label(parent,text="Hekili区域：",anchor="w", )
+        label.place(x=0, y=2, width=80, height=30)
         return label
-    def __key_input_x(self,parent):
-        ipt = Entry(parent, )
-        ipt.place(x=35, y=44, width=35, height=20)
-        return ipt
-    def __key_label_y(self,parent):
-        label = Label(parent,text="Y:",anchor="center", )
-        label.place(x=75, y=44, width=25, height=20)
+    def __tk_label_hekili_x(self,parent):
+        label = Label(parent,text="X",anchor="w", )
+        label.place(x=70, y=2, width=20, height=30)
         return label
-    def __key_input_y(self,parent):
+    def __tk_input_hekili_x(self,parent):
         ipt = Entry(parent, )
-        ipt.place(x=105, y=44, width=35, height=20)
+        ipt.place(x=88, y=2, width=40, height=30)
         return ipt
-    def __key_label_h(self,parent):
-        label = Label(parent,text="Height:",anchor="center", )
-        label.place(x=150, y=44, width=43, height=20)
+    def __tk_label_hekili_y(self,parent):
+        label = Label(parent,text="Y",anchor="w", )
+        label.place(x=130, y=2, width=20, height=30)
         return label
-    def __key_input_h(self,parent):
+    def __tk_input_hekili_y(self,parent):
         ipt = Entry(parent, )
-        ipt.place(x=200, y=44, width=35, height=20)
+        ipt.place(x=148, y=2, width=40, height=30)
         return ipt
-    def __key_label_w(self,parent):
-        label = Label(parent,text="Width:",anchor="center", )
-        label.place(x=240, y=44, width=43, height=20)
+    def __tk_label_hekili_w(self,parent):
+        label = Label(parent,text="W",anchor="w", )
+        label.place(x=190, y=2, width=20, height=30)
         return label
-    def __key_input_w(self,parent):
+    def __tk_input_hekili_w(self,parent):
         ipt = Entry(parent, )
-        ipt.place(x=290, y=44, width=35, height=20)
+        ipt.place(x=208, y=2, width=40, height=30)
         return ipt
-    def __key_zone_button(self,parent):
-        btn = Button(parent, text="Hekili技能快捷键区域", takefocus=False,)
-        btn.place(x=17, y=5, width=140, height=30)
-        return btn
-    def __coodown_zone_frame(self,parent):
+    def __tk_label_hekili_h(self,parent):
+        label = Label(parent,text="H",anchor="w", )
+        label.place(x=250, y=2, width=20, height=30)
+        return label
+    def __tk_input_hekili_h(self,parent):
+        ipt = Entry(parent, )
+        ipt.place(x=268, y=2, width=40, height=30)
+        return ipt
+    def __tk_frame_ability_key_zone(self,parent):
         frame = Frame(parent,)
-        frame.place(x=5, y=107, width=330, height=74)
+        frame.place(x=10, y=275, width=315, height=35)
         return frame
-    def __cooldown_label_x(self,parent):
-        label = Label(parent,text="X:",anchor="center", )
-        label.place(x=5, y=44, width=25, height=20)
+    def __tk_label_ability_key(self,parent):
+        label = Label(parent,text="按键区域：",anchor="w", )
+        label.place(x=0, y=2, width=80, height=30)
         return label
-    def __cooldown_input_x(self,parent):
-        ipt = Entry(parent, )
-        ipt.place(x=35, y=44, width=35, height=20)
-        return ipt
-    def __cooldown_label_y(self,parent):
-        label = Label(parent,text="Y:",anchor="center", )
-        label.place(x=75, y=44, width=25, height=20)
+    def __tk_label_ability_key_x(self,parent):
+        label = Label(parent,text="X",anchor="w", )
+        label.place(x=70, y=2, width=30, height=30)
         return label
-    def __cooldown_input_y(self,parent):
+    def __tk_input_ability_key_x(self,parent):
         ipt = Entry(parent, )
-        ipt.place(x=105, y=44, width=35, height=20)
+        ipt.place(x=88, y=2, width=40, height=30)
         return ipt
-    def __cooldown_label_h(self,parent):
-        label = Label(parent,text="Height:",anchor="center", )
-        label.place(x=150, y=44, width=43, height=20)
+    def __tk_label_ability_key_y(self,parent):
+        label = Label(parent,text="Y",anchor="w", )
+        label.place(x=130, y=2, width=30, height=30)
         return label
-    def __cooldown_input_h(self,parent):
+    def __tk_input_ability_key_y(self,parent):
         ipt = Entry(parent, )
-        ipt.place(x=200, y=44, width=35, height=20)
+        ipt.place(x=148, y=2, width=40, height=30)
         return ipt
-    def __cooldown_label_w(self,parent):
-        label = Label(parent,text="Width:",anchor="center", )
-        label.place(x=240, y=44, width=43, height=20)
+    def __tk_label_ability_key_w(self,parent):
+        label = Label(parent,text="W",anchor="w", )
+        label.place(x=190, y=2, width=30, height=30)
         return label
-    def __cooldown_input_w(self,parent):
+    def __tk_input_ability_key_w(self,parent):
         ipt = Entry(parent, )
-        ipt.place(x=290, y=44, width=35, height=20)
+        ipt.place(x=208, y=2, width=40, height=30)
         return ipt
-    def __cooldown_zone_button(self,parent):
-        btn = Button(parent, text="Hekili技能冷却区域", takefocus=False,)
-        btn.place(x=13, y=5, width=140, height=30)
-        return btn
+    def __tk_label_ability_key_h(self,parent):
+        label = Label(parent,text="H",anchor="w", )
+        label.place(x=250, y=2, width=30, height=30)
+        return label
+    def __tk_input_ability_key_h(self,parent):
+        ipt = Entry(parent, )
+        ipt.place(x=268, y=2, width=40, height=30)
+        return ipt
+    def __tk_frame_ability_cooldown_zone(self,parent):
+        frame = Frame(parent,)
+        frame.place(x=10, y=325, width=315, height=35)
+        return frame
+    def __tk_label_ability_cooldown(self,parent):
+        label = Label(parent,text="冷却区域：",anchor="w", )
+        label.place(x=0, y=2, width=80, height=30)
+        return label
+    def __tk_label_ability_cooldown_x(self,parent):
+        label = Label(parent,text="X",anchor="w", )
+        label.place(x=70, y=2, width=30, height=30)
+        return label
+    def __tk_input_ability_cooldown_x(self,parent):
+        ipt = Entry(parent, )
+        ipt.place(x=88, y=2, width=40, height=30)
+        return ipt
+    def __tk_label_ability_cooldown_y(self,parent):
+        label = Label(parent,text="Y",anchor="w", )
+        label.place(x=130, y=2, width=30, height=30)
+        return label
+    def __tk_input_ability_cooldown_y(self,parent):
+        ipt = Entry(parent, )
+        ipt.place(x=148, y=2, width=40, height=30)
+        return ipt
+    def __tk_label_ability_cooldown_w(self,parent):
+        label = Label(parent,text="W",anchor="w", )
+        label.place(x=190, y=2, width=30, height=30)
+        return label
+    def __tk_input_ability_cooldown_w(self,parent):
+        ipt = Entry(parent, )
+        ipt.place(x=208, y=2, width=40, height=30)
+        return ipt
+    def __tk_label_ability_cooldown_h(self,parent):
+        label = Label(parent,text="H",anchor="w", )
+        label.place(x=250, y=2, width=30, height=30)
+        return label
+    def __tk_input_ability_cooldown_h(self,parent):
+        ipt = Entry(parent, )
+        ipt.place(x=268, y=2, width=40, height=30)
+        return ipt
 class Win(WinGUI):
     def __init__(self, controller):
         self.ctl = controller
@@ -169,9 +240,8 @@ class Win(WinGUI):
         self.__style_config()
         self.ctl.init(self)
     def __event_bind(self):
-        self.tk_button_lyvdnkur.bind('<Button-1>',self.ctl.start)
-        self.key_zone_button.bind('<Button-1>',self.ctl.set_ability_key_zone)
-        self.cooldown_zone_button.bind('<Button-1>',self.ctl.set_ability_cooldown_zone)
+        self.tk_button_set_hekili_zone.bind('<Button-1>',self.ctl.set_hekili_zone)
+        self.tk_button_start.bind('<Button-1>',self.ctl.start_rotation)
         pass
     def __style_config(self):
         pass
