@@ -4,9 +4,7 @@ import numpy as np
 
 import config
 # 导入布局文件
-from ui import Win as MainWin
-# 导入窗口控制器
-from control import Controller as MainUIController
+import ui
 # from windowcapture import WindowCapture
 # from vision import Vision
 # from bot import WowBot
@@ -24,9 +22,6 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # wincap.start()
 
 # 将窗口控制器 传递给UI
-control = MainUIController()
-app = MainWin(control)
-control.ui = app
 
 # loop_time = time.time()
 
@@ -54,4 +49,4 @@ control.ui = app
 
 if __name__ == "__main__":
     # 启动
-    app.mainloop()
+    ui.main()

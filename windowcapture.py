@@ -8,10 +8,6 @@ import ctypes
 
 from threading import Thread, Lock
 
-# 获取屏幕的缩放比
-def get_screen_scaling():
-    return ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
-
 def list_window_names():
     def winEnumHandler(hwnd, ctx):
         if win32gui.IsWindowVisible(hwnd):
@@ -51,7 +47,6 @@ class ScreenshotWidget(QWidget):
         # setWindowOpacity() 只能作用于顶级窗口，取值为0.0~1.0，0.0为完全透明，1.0为完全不透明
         self.setWindowOpacity(0.5)  # 设置窗口透明度为 0.5，如果不加这行代码的话，运行代码后屏幕会被不透明白屏铺满
         self.setWindowState(Qt.WindowFullScreen)  # 铺满全屏幕
-        self.screen_scaling = get_screen_scaling()
  
     def mousePressEvent(self, event):
         self.begin = event.pos() 
@@ -63,14 +58,14 @@ class ScreenshotWidget(QWidget):
  
     # 根据坐标进行截图保存
     def mouseReleaseEvent(self, event):
-        self.close()
         # 坐标乘以缩放比后再进行抓取
-        self.x1, self.y1 = self.begin.x() * self.screen_scaling, self.begin.y() * self.screen_scaling
-        self.x2, self.y2 = self.end.x() * self.screen_scaling, self.end.y() * self.screen_scaling
+        self.x1, self.y1 = self.begin.x(), self.begin.y()
+        self.x2, self.y2 = self.end.x(), self.end.y()
         if self.x1 > self.x2:
             self.x1, self.x2 = self.x2, self.x1
         if self.y1 > self.y2:
             self.y1, self.y2 = self.y2, self.y1
+        self.close()
  
     # 在截图时绘制矩形，目的是为了清楚看到自己所选的区域
     def paintEvent(self, event):

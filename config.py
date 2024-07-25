@@ -1,19 +1,23 @@
-# 全局配置变量
-DEBUG = True
+import configparser
 
-# WOW窗口的名称
-WOW_WINDOW_NAME = '魔兽世界'
+# 创建配置对象
+config = configparser.ConfigParser()
 
-# Hekili技能快捷键区域
-# 游戏窗口截图 978, 740
-ABILITY_KEY_X = 978
-ABILITY_KEY_Y = 740
-ABILITY_KEY_H = 15
-ABILITY_KEY_W = 10
+# 读取配置文件
+config.read('config.ini', encoding='utf-8')
 
-# Hekili技能冷却时间区域
-# 游戏窗口截图 950, 760
-ABILITY_COOLDOWN_X = 950
-ABILITY_COOLDOWN_Y = 760
-ABILITY_COOLDOWN_H = 30
-ABILITY_COOLDOWN_W = 20
+# 获取配置值
+DEBUG = config.getboolean('Global', 'DEBUG')
+WOW_WINDOW_NAME = config.get('Global', 'WOW_WINDOW_NAME')
+HEKILI_X = config.getint('Hekili', 'HEKILI_X')
+HEKILI_Y = config.getint('Hekili', 'HEKILI_Y')
+HEKILI_W = config.getint('Hekili', 'HEKILI_W')
+HEKILI_H = config.getint('Hekili', 'HEKILI_H')
+ABILITY_KEY_X = config.getint('Hekili', 'ABILITY_KEY_X')
+ABILITY_KEY_Y = config.getint('Hekili', 'ABILITY_KEY_Y')
+ABILITY_KEY_W = config.getint('Hekili', 'ABILITY_KEY_W')
+ABILITY_KEY_H = config.getint('Hekili', 'ABILITY_KEY_H')
+ABILITY_COOLDOWN_X = config.getint('Hekili', 'ABILITY_COOLDOWN_X')
+ABILITY_COOLDOWN_Y = config.getint('Hekili', 'ABILITY_COOLDOWN_Y')
+ABILITY_COOLDOWN_W = config.getint('Hekili', 'ABILITY_COOLDOWN_W')
+ABILITY_COOLDOWN_H = config.getint('Hekili', 'ABILITY_COOLDOWN_H')
