@@ -4,11 +4,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage, qRgb, QPainter, QPen
 
 import win32gui
-import numpy as np
-from PIL import ImageQt, ImageGrab
 
 import config
-from windowcapture import ScreenshotWidget
+from windowcapture import WindowCapture
 from vision import Vision
 from bot import WowBot
 
@@ -37,13 +35,13 @@ class WinGUI(QWidget):
         # find the handle for the window we want to capture.
         # if no window name is given, capture the entire screen
         self.hwnd = win32gui.FindWindow(None, config.WOW_WINDOW_NAME)
-        self.widget = ScreenshotWidget(config.HEKILI_X, 
+        self.capture = WindowCapture(config.HEKILI_X, 
                                        config.HEKILI_Y, 
                                        config.HEKILI_X + config.HEKILI_W, 
                                        config.HEKILI_Y + config.HEKILI_H)
-        self.widget.closeEvent = self.handleWidgetClose
+        self.capture.closeEvent = self.handleWidgetClose
         self.vision = Vision()
-        self.bot = WowBot()
+        self.bot = WowBot(self.capture, self.vision)
 
         self.canvas_hekili_zone = self.__create_canvas_hekili_zone(self)
 
@@ -296,7 +294,7 @@ class WinGUI(QWidget):
         if self.hwnd:
             win32gui.SetForegroundWindow(self.hwnd)
         # 调用 ScreenshotWidget 并获取截图区域
-        self.widget.show()
+        self.capture.show()
 
     def handleInputChanged(self, event):
         ability_key_x = self.input_ability_key_x.text()
@@ -330,7 +328,7 @@ class WinGUI(QWidget):
         self.paintImage(event)
 
     def handleWidgetClose(self, event):
-        x1, y1, x2, y2 = int(self.widget.x1), int(self.widget.y1), int(self.widget.x2), int(self.widget.y2)
+        x1, y1, x2, y2 = int(self.capture.x1), int(self.capture.y1), int(self.capture.x2), int(self.capture.y2)
         print(x1, y1, x2, y2)
 
         x = x1
@@ -356,7 +354,7 @@ class WinGUI(QWidget):
         self.paintImage(event)
 
     def paintImage(self, event):
-        screenshot = self.widget.get_screenshot()
+        screenshot = self.capture.get_screenshot()
         # 将截图转换为 QImage 对象
         qt_image = QImage(screenshot.tobytes(), screenshot.width, screenshot.height, screenshot.width * 3, QImage.Format_RGB888)
         # Convert qt_image to QPixmap
@@ -377,26 +375,16 @@ class WinGUI(QWidget):
 
     def startRotation(self):
         print("开始旋转")
-        if (self.widget.stopped):
+        if (self.capture.stopped):
             # 将窗口设置为前置
             if self.hwnd:
                 win32gui.SetForegroundWindow(self.hwnd)
-            self.widget.start()
+            self.capture.start()
+            self.bot.start()
             self.buttonStart.setText("结束")
-            while(True):
-                if self.widget.screenshot is None:
-                    continue
-                screenshot_np = np.array(self.widget.screenshot)
-                ability_key = self.vision.get_ability_key(screenshot_np)
-                if (ability_key and ability_key != ''):
-                    ability_cooldown = self.vision.get_ability_cooldown(screenshot_np)
-                    if (ability_cooldown > 1):
-                        print(f'Ability {ability_key} is on cooldown for {ability_cooldown} seconds.')
-                    else:
-                        print(f'Pressing ability {ability_key}.')
-                        self.bot.press_ability_key(ability_key, ability_cooldown)
         else:
-            self.widget.stop()
+            self.capture.stop()
+            self.bot.stop()
             self.buttonStart.setText("开始")
 
 if __name__ == "__main__":

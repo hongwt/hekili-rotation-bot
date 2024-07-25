@@ -8,7 +8,7 @@ import ctypes
 
 from threading import Thread, Lock
 
-class ScreenshotWidget(QWidget):
+class WindowCapture(QWidget):
 
     # threading properties
     stopped = True
@@ -96,7 +96,7 @@ class ScreenshotWidget(QWidget):
 
 def main():
     app = QApplication([])
-    widget = ScreenshotWidget()
+    widget = WindowCapture()
     widget.show()
 # app.exec_()是PyQt中的一个方法，用于启动应用程序的事件循环。它会在调用之后开始监视事件，并根据事件的发生自动执行相应的函数。
     app.exec_()
