@@ -8,12 +8,6 @@ import ctypes
 
 from threading import Thread, Lock
 
-def list_window_names():
-    def winEnumHandler(hwnd, ctx):
-        if win32gui.IsWindowVisible(hwnd):
-            print(hex(hwnd), win32gui.GetWindowText(hwnd))
-        win32gui.EnumWindows(winEnumHandler, None) 
-
 class ScreenshotWidget(QWidget):
 
     # threading properties
@@ -21,25 +15,21 @@ class ScreenshotWidget(QWidget):
     lock = None
 
     # properties
-    hwnd = None
     screenshot = None
     x1, y1, x2, y2 = 0, 0, 0, 0
 
-    def __init__(self, window_name=None):
+    def __init__(self, x1, y1, x2, y2):
         super().__init__()
         self.begin = None
         self.end = None
 
         # create a thread lock object
         self.lock = Lock()
-        # find the handle for the window we want to capture.
-        # if no window name is given, capture the entire screen
-        if window_name is None:
-            self.hwnd = win32gui.GetDesktopWindow()
-        else:
-            self.hwnd = win32gui.FindWindow(None, window_name)
-            if not self.hwnd:
-                raise Exception('Window not found: {}'.format(window_name))
+
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
 
         # Qt.WindowStaysOnTopHint 置顶窗口
         # Qt.FramelessWindowHint 产生一个无窗口边框的窗口，此时用户无法移动该窗口和改变它的大小
