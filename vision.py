@@ -13,7 +13,10 @@ class Vision:
 
     def __init__(self):
         # load the trained model
-        self.model = torch.hub.load('baudm/parseq', 'parseq', pretrained=True).eval()
+        # 2 指定运行设备，这里为单块GPU
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+        self.model = torch.hub.load('baudm/parseq', 'parseq_tiny', pretrained=True).eval()
         self._preprocess = T.Compose([
             T.Resize((32, 128), T.InterpolationMode.BICUBIC),
             T.ToTensor(),
@@ -48,9 +51,11 @@ class Vision:
         if ability_key_image.size == 0:
             print("技能按键区域图像为空，可能是配置的区域超出了原图的范围。")
             return ''
+        loop_time = time.time()
         key_text = self.convertToText(ability_key_image)
-        if config.DEBUG:
-            cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
+        print(f"convertToText take time: {time.time() - loop_time}...")
+        # if config.DEBUG:
+        #     cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
         
         if key_text is None or len(key_text) != 1:
             return ''
@@ -69,8 +74,8 @@ class Vision:
             print("技能冷却时间区域图像为空，可能是配置的区域超出了原图的范围。")
             return
         cooldown_text = self.convertToText(ability_cooldown_image)
-        if config.DEBUG:
-            cv.imwrite('images/Cooldown_{}_{}.jpg'.format(cooldown_text, time.time()), ability_cooldown_image)
+        # if config.DEBUG:
+        #     cv.imwrite('images/Cooldown_{}_{}.jpg'.format(cooldown_text, time.time()), ability_cooldown_image)
 
         if cooldown_text and cooldown_text.isdigit() and int(cooldown_text) > 0 and int(cooldown_text) < 10:
             return int(cooldown_text)

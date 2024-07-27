@@ -374,8 +374,8 @@ class WinGUI(QWidget):
         self.canvas_hekili_zone.setPixmap(pixmap)
 
     def startRotation(self):
-        print("开始旋转")
         if (self.capture.stopped):
+            print("开始...")
             # 将窗口设置为前置
             if self.hwnd:
                 win32gui.SetForegroundWindow(self.hwnd)
@@ -383,6 +383,7 @@ class WinGUI(QWidget):
             self.bot.start()
             self.buttonStart.setText("结束")
         else:
+            print("结束...")
             self.capture.stop()
             self.bot.stop()
             self.buttonStart.setText("开始")

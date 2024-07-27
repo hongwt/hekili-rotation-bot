@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from PIL import ImageGrab
 import win32gui
@@ -86,6 +88,7 @@ class WindowCapture(QWidget):
 
     def run(self):
         # TODO: you can write your own time/iterations calculation to determine how fast this is
+        loop_time = time.time()
         while not self.stopped:
             # get an updated image of the game
             screenshot = self.get_screenshot()
@@ -93,6 +96,8 @@ class WindowCapture(QWidget):
             self.lock.acquire()
             self.screenshot = screenshot
             self.lock.release()
+            # print(f'Window Capture FPS {1 / (time.time() - loop_time)}')
+            loop_time = time.time()
 
 def main():
     app = QApplication([])
