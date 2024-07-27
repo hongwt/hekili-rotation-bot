@@ -1,37 +1,16 @@
-import time
-
-import numpy as np
-from PIL import ImageGrab
-import win32gui
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QPainter, QPen
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget
-import ctypes
-
-from threading import Thread, Lock
+from PyQt5.QtGui import QPainter, QPen
+from PyQt5.QtWidgets import QApplication, QWidget
 
 class WindowCapture(QWidget):
 
-    # threading properties
-    stopped = True
-    lock = None
-
-    # properties
-    screenshot = None
+    # Properties
     x1, y1, x2, y2 = 0, 0, 0, 0
 
-    def __init__(self, x1, y1, x2, y2):
+    def __init__(self):
         super().__init__()
         self.begin = None
         self.end = None
-
-        # create a thread lock object
-        self.lock = Lock()
-
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
 
         # Qt.WindowStaysOnTopHint 置顶窗口
         # Qt.FramelessWindowHint 产生一个无窗口边框的窗口，此时用户无法移动该窗口和改变它的大小
@@ -73,31 +52,6 @@ class WindowCapture(QWidget):
         # drawRect来绘制矩形，四个参数分别是x,y,w,h
         painter.drawRect(self.begin.x(), self.begin.y(),
                          self.end.x() - self.begin.x(), self.end.y() - self.begin.y())
-
-    def get_screenshot(self):
-        # 获取屏幕截图
-        return ImageGrab.grab(bbox=(self.x1, self.y1, self.x2, self.y2))
-
-    def start(self):
-        self.stopped = False
-        t = Thread(target=self.run)
-        t.start()
-
-    def stop(self):
-        self.stopped = True
-
-    def run(self):
-        # TODO: you can write your own time/iterations calculation to determine how fast this is
-        loop_time = time.time()
-        while not self.stopped:
-            # get an updated image of the game
-            screenshot = self.get_screenshot()
-            # lock the thread while updating the results
-            self.lock.acquire()
-            self.screenshot = screenshot
-            self.lock.release()
-            # print(f'Window Capture FPS {1 / (time.time() - loop_time)}')
-            loop_time = time.time()
 
 def main():
     app = QApplication([])

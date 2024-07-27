@@ -5,23 +5,23 @@ import pyautogui
 
 import numpy as np
 
-from threading import Thread, Lock
+from PIL import ImageGrab
+
+import multiprocessing
+
+from vision import Vision
+
+import config
 
 class WowBot:
 
     # threading properties
     stopped = True
-    lock = None
 
-    capture = None
     vision = None
 
-    def __init__(self, capture, vision):
-        # create a thread lock object
-        self.lock = Lock()
-        
-        self.capture = capture
-        self.vision = vision
+    def __init__(self):
+        self.vision = Vision()
 
     def press_ability_key(self, key, cooldown):
         # delay = random.uniform(0.1, 0.2)
@@ -32,27 +32,30 @@ class WowBot:
         print(f'Casting ability {key} with cooldown {cooldown} seconds.')
         pyautogui.press(key)
 
+
+    def runBot(self):
+        while not self.stopped:
+            screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
+                                            config.HEKILI_Y, 
+                                            config.HEKILI_X + config.HEKILI_W, 
+                                            config.HEKILI_Y + config.HEKILI_H))
+            if screenshot is None:
+                continue
+
+            screenshot_np = np.array(screenshot)
+            loop_time = time.time()
+            key = self.vision.get_ability_key(screenshot_np)
+            print(f'vision FPS {1 / (time.time() - loop_time)}')
+            if (key and key != ''):
+                self.press_ability_key(key, 0)
+
     def start(self):
         self.stopped = False
-        t = Thread(target=self.run)
-        t.start()
+        self.process = multiprocessing.Process(target=self.runBot)
+        self.process.start()
 
     def stop(self):
+        if self.process:
+            self.process.terminate()
+            self.process.join()
         self.stopped = True
-
-    # main logic controller
-    def run(self):
-        loop_time = time.time()
-        while not self.stopped:
-            if self.capture.screenshot is None:
-                continue
-            screenshot_np = np.array(self.capture.screenshot)
-            ability_key = self.vision.get_ability_key(screenshot_np)
-            if (ability_key and ability_key != ''):
-                # ability_cooldown = self.vision.get_ability_cooldown(screenshot_np)
-                # if (ability_cooldown > 1):
-                #     print(f'Ability {ability_key} is on cooldown for {ability_cooldown} seconds.')
-                # else:
-                self.press_ability_key(ability_key, 0)
-            print(f'WoW Bot FPS {1 / (time.time() - loop_time)}')
-            loop_time = time.time()

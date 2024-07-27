@@ -1,13 +1,14 @@
 import os
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage, qRgb, QPainter, QPen
 
 import win32gui
+from PIL import ImageGrab
 
 import config
 from windowcapture import WindowCapture
-from vision import Vision
 from bot import WowBot
 
 def list_window_names():
@@ -15,11 +16,15 @@ def list_window_names():
         if win32gui.IsWindowVisible(hwnd):
             print(hex(hwnd), win32gui.GetWindowText(hwnd))
     win32gui.EnumWindows(winEnumHandler, None)
+
 class WinGUI(QWidget):
+
+    # threading properties
+    stopped = True
+    lock = None
 
     # properties
     hwnd = None
-    vision = None
     bot = None
 
     def __init__(self):
@@ -35,18 +40,16 @@ class WinGUI(QWidget):
         # find the handle for the window we want to capture.
         # if no window name is given, capture the entire screen
         self.hwnd = win32gui.FindWindow(None, config.WOW_WINDOW_NAME)
-        self.capture = WindowCapture(config.HEKILI_X, 
-                                       config.HEKILI_Y, 
-                                       config.HEKILI_X + config.HEKILI_W, 
-                                       config.HEKILI_Y + config.HEKILI_H)
+        self.capture = WindowCapture()
         self.capture.closeEvent = self.handleWidgetClose
-        self.vision = Vision()
-        self.bot = WowBot(self.capture, self.vision)
+
+        self.bot = WowBot()
 
         self.canvas_hekili_zone = self.__create_canvas_hekili_zone(self)
 
         self.frame_hekili_zone = self.__create_frame_hekili_zone(self)
         self.label_hekili = self.__create_label_hekili(self.frame_hekili_zone)
+        
         self.label_hekili_x = self.__create_label_hekili_x(self.frame_hekili_zone)
         self.input_hekili_x = self.__create_input_hekili_x(self.frame_hekili_zone)
         self.label_hekili_y = self.__create_label_hekili_y(self.frame_hekili_zone)
@@ -354,7 +357,10 @@ class WinGUI(QWidget):
         self.paintImage(event)
 
     def paintImage(self, event):
-        screenshot = self.capture.get_screenshot()
+        screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
+                                            config.HEKILI_Y, 
+                                            config.HEKILI_X + config.HEKILI_W, 
+                                            config.HEKILI_Y + config.HEKILI_H))
         # 将截图转换为 QImage 对象
         qt_image = QImage(screenshot.tobytes(), screenshot.width, screenshot.height, screenshot.width * 3, QImage.Format_RGB888)
         # Convert qt_image to QPixmap
@@ -374,17 +380,15 @@ class WinGUI(QWidget):
         self.canvas_hekili_zone.setPixmap(pixmap)
 
     def startRotation(self):
-        if (self.capture.stopped):
+        if (self.bot.stopped):
             print("开始...")
             # 将窗口设置为前置
             if self.hwnd:
                 win32gui.SetForegroundWindow(self.hwnd)
-            self.capture.start()
             self.bot.start()
             self.buttonStart.setText("结束")
         else:
             print("结束...")
-            self.capture.stop()
             self.bot.stop()
             self.buttonStart.setText("开始")
 

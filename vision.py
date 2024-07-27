@@ -1,37 +1,44 @@
-import cv2 as cv
 import time
+import numpy as np
+from PIL import Image, ImageGrab
 import torch
 from torchvision import transforms as T
-from PIL import Image
 
 import config
 
 class Vision:
 
     # properties
-    model = None
+    models = ['parseq', 'parseq_tiny', 'abinet', 'crnn', 'trba', 'vitstr']
 
     def __init__(self):
-        # load the trained model
-        # 2 指定运行设备，这里为单块GPU
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-        self.model = torch.hub.load('baudm/parseq', 'parseq_tiny', pretrained=True).eval()
+        self._model_cache = {}
         self._preprocess = T.Compose([
             T.Resize((32, 128), T.InterpolationMode.BICUBIC),
             T.ToTensor(),
             T.Normalize(0.5, 0.5)
         ])
 
-    def convertToText(self, image):
+    def _get_model(self, name):
+        if name in self._model_cache:
+            return self._model_cache[name]
+        model = torch.hub.load('baudm/parseq', name, pretrained=True, trust_repo=True).eval()
+        self._model_cache[name] = model
+        return model
+
+    @torch.inference_mode()
+    def convertToText(self, model_name, image):
         if image is None:
-            return ''
-        image = Image.fromarray(image).convert('RGB')
-        image = self._preprocess(image).unsqueeze(0)
+            return '', []
+        
+        image = Image.fromarray(image)
+
+        model = self._get_model(model_name)
+        image = self._preprocess(image.convert('RGB')).unsqueeze(0)
         # Greedy decoding
-        pred = self.model(image).softmax(-1)
-        label, _ = self.model.tokenizer.decode(pred)
-        raw_label, raw_confidence = self.model.tokenizer.decode(pred, raw=True)
+        pred = model(image).softmax(-1)
+        label, _ = model.tokenizer.decode(pred)
+        raw_label, raw_confidence = model.tokenizer.decode(pred, raw=True)
         # Format confidence values
         max_len = len(label[0]) + 1
         conf = list(map('{:0.1f}'.format, raw_confidence[0][:max_len].tolist()))
@@ -44,16 +51,14 @@ class Vision:
         else:
             return ''
 
-    def get_ability_key(self, screenshot_np):
+    def get_ability_key(self, screenshot_np=None):
         # 技能按键区域
         ability_key_image = screenshot_np[config.ABILITY_KEY_Y:config.ABILITY_KEY_Y+config.ABILITY_KEY_H,
                                         config.ABILITY_KEY_X:config.ABILITY_KEY_X+config.ABILITY_KEY_W]
         if ability_key_image.size == 0:
             print("技能按键区域图像为空，可能是配置的区域超出了原图的范围。")
             return ''
-        loop_time = time.time()
-        key_text = self.convertToText(ability_key_image)
-        print(f"convertToText take time: {time.time() - loop_time}...")
+        key_text = self.convertToText('parseq_tiny', ability_key_image)
         # if config.DEBUG:
         #     cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
         
@@ -81,3 +86,16 @@ class Vision:
             return int(cooldown_text)
         else:
             return -1
+
+if __name__ == '__main__':
+    vision = Vision()
+    while True:
+        screenshot_np = ImageGrab.grab(bbox=(config.HEKILI_X, 
+                                       config.HEKILI_Y, 
+                                       config.HEKILI_X + config.HEKILI_W, 
+                                       config.HEKILI_Y + config.HEKILI_H))
+        screenshot_np = np.array(screenshot_np)
+        loop_time = time.time()
+        key = vision.get_ability_key(screenshot_np)
+        print(f'vision FPS {1 / (time.time() - loop_time)}')
+        print('key output: ', key)
