@@ -1,10 +1,20 @@
+import os
+import sys
+
 import configparser
 
 # 创建配置对象
 config = configparser.ConfigParser()
 
 # 读取配置文件
-config.read('config.ini', encoding='utf-8')
+if getattr(sys, 'frozen', False):
+    application_path = os.path.dirname(sys.executable)
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+print(application_path)
+
+config.read(application_path + '/config.ini', encoding='utf-8')
 
 # 获取配置值
 DEBUG = config.getboolean('Global', 'DEBUG')

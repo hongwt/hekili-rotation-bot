@@ -1,3 +1,5 @@
 __pycache__/
 images/
+build/
+dist/
 __pycache__/bot.cpython-312.pyc

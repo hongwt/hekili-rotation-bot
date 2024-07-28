@@ -46,7 +46,7 @@ class Vision:
         if config.DEBUG:
             print('raw output: ', raw_output)
         # ('100', [['1', '0', '0', '[E]'], ['0.3', '0.4', '0.3', '0.4']])
-        if float(conf[0]) > 0.8:
+        if float(conf[0]) >= 0.8:
             return label[0]
         else:
             return ''
@@ -61,13 +61,14 @@ class Vision:
         key_text = self.convertToText('parseq_tiny', ability_key_image)
         # if config.DEBUG:
         #     cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
-        
-        if key_text is None or len(key_text) != 1:
-            return ''
-        key = key_text[0]
-        # 正确识别技能快捷键
-        if key and (key >= '1' and key <= 'Z'):
-            return key
+
+        if key_text and len(key_text) > 0:
+            key = key_text[0]
+            # 正确识别技能快捷键
+            if key and (key >= '1' and key <= 'Z'):
+                return key
+            else:
+                return ''
         else:
             return ''
 

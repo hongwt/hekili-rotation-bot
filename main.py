@@ -1,8 +1,9 @@
 import os
+import multiprocessing
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QImage, qRgb, QPainter, QPen
+from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
 
 import win32gui
 from PIL import ImageGrab
@@ -393,6 +394,7 @@ class WinGUI(QWidget):
             self.buttonStart.setText("开始")
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     list_window_names()
 
