@@ -6,7 +6,7 @@ import numpy as np
 
 from PIL import ImageGrab
 
-import multiprocessing
+from threading import Thread, Lock
 
 from vision import Vision
 
@@ -16,10 +16,13 @@ class WowBot:
 
     # threading properties
     stopped = True
+    lock = None
 
     vision = None
 
     def __init__(self):
+        # create a thread lock object
+        self.lock = Lock()
         self.vision = Vision()
 
     def press_ability_key(self, key, cooldown):
@@ -32,7 +35,7 @@ class WowBot:
         pyautogui.press(key)
 
 
-    def runBot(self):
+    def run(self):
         while not self.stopped:
             screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
                                             config.HEKILI_Y, 
@@ -50,11 +53,8 @@ class WowBot:
 
     def start(self):
         self.stopped = False
-        self.process = multiprocessing.Process(target=self.runBot)
-        self.process.start()
+        t = Thread(target=self.run)
+        t.start()
 
     def stop(self):
-        if self.process:
-            self.process.terminate()
-            self.process.join()
         self.stopped = True
