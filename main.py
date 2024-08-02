@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
 
 import win32gui
+from pynput import mouse
 from PIL import ImageGrab
 
 import config
@@ -45,6 +46,9 @@ class WinGUI(QWidget):
         self.capture.closeEvent = self.handleWidgetClose
 
         self.bot = WowBot()
+
+        self.mouse_listener = mouse.Listener(on_click=self.on_mouse_event)
+        self.mouse_listener.start()
 
         self.canvas_hekili_zone = self.__create_canvas_hekili_zone(self)
 
@@ -356,6 +360,11 @@ class WinGUI(QWidget):
     def paintEvent(self, event):
         # Add code here to switch windows
         self.paintImage(event)
+
+    def on_mouse_event(self, x, y, button, pressed):
+        # print(f"Mouse event: {button} {'pressed' if pressed else 'released'} at ({x}, {y})")
+        if button == mouse.Button.x2 and pressed:
+            self.startRotation()
 
     def paintImage(self, event):
         screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 

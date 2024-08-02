@@ -34,7 +34,6 @@ class WowBot:
         print(f'Casting ability {key} with cooldown {cooldown} seconds.')
         pyautogui.press(key)
 
-
     def run(self):
         while not self.stopped:
             screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
@@ -49,7 +48,10 @@ class WowBot:
             key = self.vision.get_ability_key(screenshot_np)
             print(f'vision FPS {1 / (time.time() - loop_time)}')
             if (key and key != ''):
-                self.press_ability_key(key, 0)
+                if key in config.VALID_KEYS:
+                    self.press_ability_key(key, 0)
+                else:
+                    screenshot.save(f'images/invalid_{key}_{time.time()}.png')
 
     def start(self):
         self.stopped = False
