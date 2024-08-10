@@ -9,36 +9,28 @@ import config
 class Vision:
 
     # properties
-    models = ['parseq', 'parseq_tiny', 'abinet', 'crnn', 'trba', 'vitstr']
+    model_name = 'parseq_tiny'
 
     def __init__(self):
-        self._model_cache = {}
+        self._model = torch.hub.load('baudm/parseq', self.model_name, pretrained=True, trust_repo=True).eval()
         self._preprocess = T.Compose([
             T.Resize((32, 128), T.InterpolationMode.BICUBIC),
             T.ToTensor(),
             T.Normalize(0.5, 0.5)
         ])
 
-    def _get_model(self, name):
-        if name in self._model_cache:
-            return self._model_cache[name]
-        model = torch.hub.load('baudm/parseq', name, pretrained=True, trust_repo=True).eval()
-        self._model_cache[name] = model
-        return model
-
     @torch.inference_mode()
-    def convertToText(self, model_name, image):
+    def convertToText(self, image):
         if image is None:
             return '', []
         
         image = Image.fromarray(image)
 
-        model = self._get_model(model_name)
         image = self._preprocess(image.convert('RGB')).unsqueeze(0)
         # Greedy decoding
-        pred = model(image).softmax(-1)
-        label, _ = model.tokenizer.decode(pred)
-        raw_label, raw_confidence = model.tokenizer.decode(pred, raw=True)
+        pred = self._model(image).softmax(-1)
+        label, _ = self._model.tokenizer.decode(pred)
+        raw_label, raw_confidence = self._model.tokenizer.decode(pred, raw=True)
         # Format confidence values
         max_len = len(label[0]) + 1
         conf = list(map('{:0.1f}'.format, raw_confidence[0][:max_len].tolist()))
@@ -58,7 +50,7 @@ class Vision:
         if ability_key_image.size == 0:
             print("技能按键区域图像为空，可能是配置的区域超出了原图的范围。")
             return ''
-        key_text = self.convertToText('parseq_tiny', ability_key_image)
+        key_text = self.convertToText(ability_key_image)
         # if config.DEBUG:
         #     cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
 
