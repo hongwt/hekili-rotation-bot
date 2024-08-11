@@ -54,15 +54,7 @@ class Vision:
         # if config.DEBUG:
         #     cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
 
-        if key_text and len(key_text) > 0:
-            key = key_text[0]
-            # 正确识别技能快捷键
-            if key and (key >= '1' and key <= 'Z'):
-                return key
-            else:
-                return ''
-        else:
-            return ''
+        return key_text
 
     def get_ability_cooldown(self, screenshot_np):
         # 技能冷却时间区域

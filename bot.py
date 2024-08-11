@@ -25,6 +25,17 @@ class WowBot:
         self.lock = Lock()
         self.vision = Vision()
 
+    def convert_to_key(self, key_text):
+        if not key_text:
+            return ''
+        # drop all keys that are not in the valid keys list
+        key_text = [key for key in key_text if (key >= '0' and key <= 'z')]
+        key_text = ''.join(key_text)
+        if len(key_text) == 1:
+            return key_text[0]
+        else:
+            return ''
+        
     def press_ability_key(self, key, cooldown):
         # delay = random.uniform(0.1, 0.2)
         # if (cooldown > 0):
@@ -45,8 +56,9 @@ class WowBot:
 
             screenshot_np = np.array(screenshot)
             loop_time = time.time()
-            key = self.vision.get_ability_key(screenshot_np)
+            key_text = self.vision.get_ability_key(screenshot_np)
             print(f'vision FPS {1 / (time.time() - loop_time)}')
+            key = self.convert_to_key(key_text)
             if (key and key != ''):
                 if key in config.VALID_KEYS:
                     self.press_ability_key(key, 0)

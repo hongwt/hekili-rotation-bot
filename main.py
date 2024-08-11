@@ -27,6 +27,7 @@ class WinGUI(QWidget):
 
     # properties
     hwnd = None
+    showed = True
     bot = None
 
     def __init__(self):
@@ -359,12 +360,15 @@ class WinGUI(QWidget):
 
     def paintEvent(self, event):
         # Add code here to switch windows
-        self.paintImage(event)
+        if self.showed:
+            self.paintImage(event)
 
     def on_mouse_event(self, x, y, button, pressed):
         # print(f"Mouse event: {button} {'pressed' if pressed else 'released'} at ({x}, {y})")
         if button == mouse.Button.x2 and pressed:
             self.startRotation()
+        elif button == mouse.Button.x1 and pressed:
+            self.hideWindow()
 
     def paintImage(self, event):
         screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
@@ -389,6 +393,24 @@ class WinGUI(QWidget):
         # Set the pixmap as the background of the canvas
         self.canvas_hekili_zone.setPixmap(pixmap)
 
+    def hideWindow(self):
+        if self.showed:
+            self.buttonSetZone.hide()
+            self.canvas_hekili_zone.hide()  # Hide the canvas
+            self.frame_hekili_zone.hide()  # Hide the frame
+            self.frame_ability_key_zone.hide()
+            self.frame_ability_cooldown_zone.hide()
+            self.setFixedSize(335, 50)
+            self.showed = False
+        else:
+            self.buttonSetZone.show()
+            self.canvas_hekili_zone.show()
+            self.frame_hekili_zone.show()
+            self.frame_ability_key_zone.show()
+            self.frame_ability_cooldown_zone.show()
+            self.setFixedSize(335, 400)
+            self.showed = True
+
     def startRotation(self):
         if (self.bot.stopped):
             print("开始...")
@@ -409,5 +431,7 @@ if __name__ == "__main__":
 
     app = QApplication([])
     win = WinGUI()
+    win.setWindowOpacity(0.9)  # 设置窗口为半透明
+    win.setWindowFlags(win.windowFlags() | Qt.WindowStaysOnTopHint)  # 将窗口设置为总是在最前面
     win.show()
     app.exec_()
