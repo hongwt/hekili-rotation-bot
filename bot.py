@@ -31,7 +31,7 @@ class WowBot:
         # drop all keys that are not in the valid keys list
         key_text = [key for key in key_text if (key >= '0' and key <= 'z')]
         key_text = ''.join(key_text)
-        if len(key_text) > 0 and len(key_text) <= 2:
+        if len(key_text) == 1:
             return key_text[0]
         else:
             return ''
