@@ -38,7 +38,7 @@ class Vision:
         if config.DEBUG:
             print('raw output: ', raw_output)
         # ('100', [['1', '0', '0', '[E]'], ['0.3', '0.4', '0.3', '0.4']])
-        if float(conf[0]) >= 0.8:
+        if float(conf[0]) >= 0.7:
             return label[0]
         else:
             return ''
