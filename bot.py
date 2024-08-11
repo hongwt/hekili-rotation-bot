@@ -31,6 +31,9 @@ class WowBot:
         # drop all keys that are not in the valid keys list
         key_text = [key for key in key_text if (key >= '0' and key <= 'z')]
         key_text = ''.join(key_text)
+        # add some special cases
+        if ("11" == key_text):
+            return '1'
         if len(key_text) == 1:
             return key_text[0]
         else:
@@ -64,6 +67,8 @@ class WowBot:
                     self.press_ability_key(key, 0)
                 else:
                     screenshot.save(f'images/invalid_{key}_{time.time()}.png')
+            delay = random.uniform(0.05, 0.15)
+            time.sleep(delay)
 
     def start(self):
         self.stopped = False
