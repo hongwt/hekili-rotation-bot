@@ -48,8 +48,8 @@ class WinGUI(QWidget):
 
         self.bot = WowBot()
 
-        self.mouse_listener = mouse.Listener(on_click=self.on_mouse_event)
-        self.mouse_listener.start()
+        # self.mouse_listener = mouse.Listener(on_click=self.on_mouse_event)
+        # self.mouse_listener.start()
 
         self.canvas_hekili_zone = self.__create_canvas_hekili_zone(self)
 
