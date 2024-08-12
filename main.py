@@ -107,9 +107,27 @@ class WinGUI(QWidget):
         self.buttonSetZone = QPushButton("设置截图区域")
         self.buttonSetZone.setFixedHeight(35)
         self.buttonSetZone.clicked.connect(self.setHekiliZone)
-        self.buttonStart = QPushButton("开始")
+
+        self.buttonFrame = QFrame(self)
+        self.buttonFrame.setGeometry(10, 225, 315, 35)
+        self.buttonFrame.setFixedHeight(35)
+
+        # 创建水平布局
+        layout = QHBoxLayout(self.buttonFrame)
+        layout.setContentsMargins(0, 0, 0, 0)  # 设置布局的边距
+
+        self.buttonStart = QPushButton("开始", self.buttonFrame)
         self.buttonStart.setFixedHeight(35)
         self.buttonStart.clicked.connect(self.startRotation)
+        layout.addWidget(self.buttonStart)  # 将按钮添加到布局中
+
+        self.buttonHiden = QPushButton("折叠", self.buttonFrame)
+        self.buttonHiden.setFixedHeight(35)
+        self.buttonHiden.clicked.connect(self.hideWindow)
+        layout.addWidget(self.buttonHiden)  # 将按钮添加到布局中
+
+        # 设置布局到按钮框架
+        self.buttonFrame.setLayout(layout)
 
         # 添加布局到主布局
         layout = QVBoxLayout()
@@ -118,7 +136,7 @@ class WinGUI(QWidget):
         layout.addWidget(self.frame_hekili_zone)
         layout.addWidget(self.frame_ability_key_zone)
         layout.addWidget(self.frame_ability_cooldown_zone)
-        layout.addWidget(self.buttonStart)
+        layout.addWidget(self.buttonFrame)
 
         self.setLayout(layout)
 
@@ -298,6 +316,7 @@ class WinGUI(QWidget):
         ipt.setGeometry(268, 2, 40, 30)
         ipt.textChanged.connect(self.handleInputChanged)
         return ipt
+    
     def setHekiliZone(self):
         # 将窗口设置为前置
         if self.hwnd:
@@ -363,12 +382,12 @@ class WinGUI(QWidget):
         if self.showed:
             self.paintImage(event)
 
-    def on_mouse_event(self, x, y, button, pressed):
-        # print(f"Mouse event: {button} {'pressed' if pressed else 'released'} at ({x}, {y})")
-        if button == mouse.Button.x2 and pressed:
-            self.startRotation()
-        elif button == mouse.Button.x1 and pressed:
-            self.hideWindow()
+    # def on_mouse_event(self, x, y, button, pressed):
+    #     # print(f"Mouse event: {button} {'pressed' if pressed else 'released'} at ({x}, {y})")
+    #     if button == mouse.Button.x2 and pressed:
+    #         self.startRotation()
+    #     elif button == mouse.Button.x1 and pressed:
+    #         self.hideWindow()
 
     def paintImage(self, event):
         screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
@@ -402,6 +421,7 @@ class WinGUI(QWidget):
             self.frame_ability_cooldown_zone.hide()
             self.setFixedSize(335, 50)
             self.showed = False
+            self.buttonHiden.setText("展开")
         else:
             self.buttonSetZone.show()
             self.canvas_hekili_zone.show()
@@ -410,6 +430,7 @@ class WinGUI(QWidget):
             self.frame_ability_cooldown_zone.show()
             self.setFixedSize(335, 400)
             self.showed = True
+            self.buttonHiden.setText("折叠")
 
     def startRotation(self):
         if (self.bot.stopped):
