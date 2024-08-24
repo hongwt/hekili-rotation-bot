@@ -9,7 +9,7 @@ import config
 class Vision:
 
     # properties
-    model_name = 'parseq_tiny'
+    model_name = 'parseq'
 
     def __init__(self):
         self._model = torch.hub.load('baudm/parseq', self.model_name, pretrained=True, trust_repo=True).eval()

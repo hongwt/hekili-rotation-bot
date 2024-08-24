@@ -13,7 +13,7 @@ stroke_color = (0, 0, 0)  # Black
 # Define the stroke width
 stroke_width = 1
 
-def get_font_pic(text):
+def get_font_text_size(text):
     canvas = Image.new('RGB', (32,32))
     draw = ImageDraw.Draw(canvas)
 
@@ -21,9 +21,7 @@ def get_font_pic(text):
     bbox = canvas.getbbox()
     # 宽高
     size = (bbox[2] - bbox[0], bbox[3] - bbox[1])
-    # 重新生成图片
-    font_pic = canvas.crop(bbox)
-    return font_pic
+    return size
 
 # Load the image
 image_path = r"C:\Users\jetth\Pictures\wow\spell_holy_blessingofprotection.jpg"
@@ -34,13 +32,12 @@ image.resize((50, 50))
 draw = ImageDraw.Draw(image)
 
 # Calculate text size using the correct method from ImageFont
-font_pic = get_font_pic("Z")
+font_text_size = get_font_text_size("Z")
 
 # Calculate the position to add the font picture
-font_pic_position = (image.width - font_pic.width - 3, 3)
+font_pic_position = (image.width - font_text_size[0] - 3, 3)
 
-# Add the font picture to the image
-image.paste(font_pic, font_pic_position)
+draw.text(font_pic_position, "Z", font=font, fill=text_color, stroke_width=stroke_width, stroke_fill=stroke_color)
 
 # Save the modified image
 output_path = "output.jpg"

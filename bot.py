@@ -48,6 +48,15 @@ class WowBot:
         print(f'Casting ability {key} with cooldown {cooldown} seconds.')
         pyautogui.press(key)
 
+
+    # 创建一个函数，将所有非黑色像素转换为白色
+    def to_white_or_black(self, value):
+        threshold = 1
+        if value < threshold:
+            return 0  # 返回黑色
+        else:
+            return 255  # 返回白色
+    
     def run(self):
         while not self.stopped:
             screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
@@ -57,6 +66,10 @@ class WowBot:
             if screenshot is None:
                 continue
 
+            screenshot = screenshot.convert('L')
+            # 使用point方法应用这个函数
+            screenshot = screenshot.point(self.to_white_or_black)
+            
             screenshot_np = np.array(screenshot)
             loop_time = time.time()
             key_text = self.vision.get_ability_key(screenshot_np)
