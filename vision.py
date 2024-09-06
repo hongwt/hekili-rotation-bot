@@ -4,6 +4,9 @@ from PIL import Image, ImageGrab
 import torch
 from torchvision import transforms as T
 
+from strhub.data.module import SceneTextDataModule
+from strhub.models.utils import load_from_checkpoint, parse_model_args
+
 import config
 
 class Vision:
@@ -12,9 +15,10 @@ class Vision:
     model_name = 'parseq'
 
     def __init__(self):
-        self._model = torch.hub.load('baudm/parseq', self.model_name, pretrained=True, trust_repo=True).eval()
+        model_path = 'D:\\vs_project\\parseq\\last.ckpt'
+        self._model =     model = load_from_checkpoint(model_path).eval().to('cpu').eval()
         self._preprocess = T.Compose([
-            T.Resize((32, 128), T.InterpolationMode.BICUBIC),
+            T.Resize((24, 24), T.InterpolationMode.BICUBIC),
             T.ToTensor(),
             T.Normalize(0.5, 0.5)
         ])
