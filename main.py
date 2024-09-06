@@ -36,7 +36,7 @@ class WinGUI(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Hekili Bot")
-        self.setGeometry(300, 300, 335, 400)
+        self.setGeometry(300, 300, 335, 350)
         self.setFixedSize(335, 400)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
@@ -76,17 +76,6 @@ class WinGUI(QWidget):
         self.label_ability_key_h = self.__create_label_ability_key_h(self.frame_ability_key_zone)
         self.input_ability_key_h = self.__create_input_ability_key_h(self.frame_ability_key_zone)
 
-        self.frame_ability_cooldown_zone = self.__create_frame_ability_cooldown_zone(self)
-        self.label_ability_cooldown = self.__create_label_ability_cooldown(self.frame_ability_cooldown_zone)
-        self.label_ability_cooldown_x = self.__create_label_ability_cooldown_x(self.frame_ability_cooldown_zone)
-        self.input_ability_cooldown_x = self.__create_input_ability_cooldown_x(self.frame_ability_cooldown_zone)
-        self.label_ability_cooldown_y = self.__create_label_ability_cooldown_y(self.frame_ability_cooldown_zone)
-        self.input_ability_cooldown_y = self.__create_input_ability_cooldown_y(self.frame_ability_cooldown_zone)
-        self.label_ability_cooldown_w = self.__create_label_ability_cooldown_w(self.frame_ability_cooldown_zone)
-        self.input_ability_cooldown_w = self.__create_input_ability_cooldown_w(self.frame_ability_cooldown_zone)
-        self.label_ability_cooldown_h = self.__create_label_ability_cooldown_h(self.frame_ability_cooldown_zone)
-        self.input_ability_cooldown_h = self.__create_input_ability_cooldown_h(self.frame_ability_cooldown_zone)
-
         # 设置默认值
         self.input_hekili_x.setText(str(config.HEKILI_X))
         self.input_hekili_y.setText(str(config.HEKILI_Y))
@@ -97,11 +86,6 @@ class WinGUI(QWidget):
         self.input_ability_key_y.setText(str(config.ABILITY_KEY_Y))
         self.input_ability_key_w.setText(str(config.ABILITY_KEY_W))
         self.input_ability_key_h.setText(str(config.ABILITY_KEY_H))
-
-        self.input_ability_cooldown_x.setText(str(config.ABILITY_COOLDOWN_X))
-        self.input_ability_cooldown_y.setText(str(config.ABILITY_COOLDOWN_Y))
-        self.input_ability_cooldown_w.setText(str(config.ABILITY_COOLDOWN_W))
-        self.input_ability_cooldown_h.setText(str(config.ABILITY_COOLDOWN_H))
 
         # 添加按钮
         self.buttonSetZone = QPushButton("设置截图区域")
@@ -135,7 +119,6 @@ class WinGUI(QWidget):
         layout.addWidget(self.canvas_hekili_zone)
         layout.addWidget(self.frame_hekili_zone)
         layout.addWidget(self.frame_ability_key_zone)
-        layout.addWidget(self.frame_ability_cooldown_zone)
         layout.addWidget(self.buttonFrame)
 
         self.setLayout(layout)
@@ -262,61 +245,6 @@ class WinGUI(QWidget):
         ipt.textChanged.connect(self.handleInputChanged)
         return ipt
 
-    def __create_frame_ability_cooldown_zone(self, parent):
-        frame = QFrame(parent)
-        frame.setGeometry(10, 325, 315, 35)
-        frame.setFixedHeight(35)
-        return frame
-
-    def __create_label_ability_cooldown(self, parent):
-        label = QLabel("冷却区域：", parent)
-        label.setGeometry(0, 2, 80, 30)
-        return label
-
-    def __create_label_ability_cooldown_x(self, parent):
-        label = QLabel("X", parent)
-        label.setGeometry(70, 2, 30, 30)
-        return label
-
-    def __create_input_ability_cooldown_x(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(88, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def __create_label_ability_cooldown_y(self, parent):
-        label = QLabel("Y", parent)
-        label.setGeometry(130, 2, 30, 30)
-        return label
-
-    def __create_input_ability_cooldown_y(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(148, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def __create_label_ability_cooldown_w(self, parent):
-        label = QLabel("W", parent)
-        label.setGeometry(190, 2, 30, 30)
-        return label
-
-    def __create_input_ability_cooldown_w(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(208, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def __create_label_ability_cooldown_h(self, parent):
-        label = QLabel("H", parent)
-        label.setGeometry(250, 2, 30, 30)
-        return label
-
-    def __create_input_ability_cooldown_h(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(268, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-    
     def setHekiliZone(self):
         # 将窗口设置为前置
         if self.hwnd:
@@ -330,11 +258,6 @@ class WinGUI(QWidget):
         ability_key_w = self.input_ability_key_w.text()
         ability_key_h = self.input_ability_key_h.text()
 
-        ability_cooldown_x = self.input_ability_cooldown_x.text()
-        ability_cooldown_y = self.input_ability_cooldown_y.text()
-        ability_cooldown_w = self.input_ability_cooldown_w.text()
-        ability_cooldown_h = self.input_ability_cooldown_h.text()
-
         if ability_key_x and ability_key_x.isdigit():
             config.ABILITY_KEY_X = int(ability_key_x)
         if ability_key_y and ability_key_y.isdigit():
@@ -343,15 +266,6 @@ class WinGUI(QWidget):
             config.ABILITY_KEY_W = int(ability_key_w)
         if ability_key_h and ability_key_h.isdigit():
             config.ABILITY_KEY_H = int(ability_key_h)
-
-        if ability_cooldown_x and ability_cooldown_x.isdigit():
-            config.ABILITY_COOLDOWN_X = int(ability_cooldown_x)
-        if ability_cooldown_y and ability_cooldown_y.isdigit():
-            config.ABILITY_COOLDOWN_Y = int(ability_cooldown_y)
-        if ability_cooldown_w and ability_cooldown_w.isdigit():
-            config.ABILITY_COOLDOWN_W = int(ability_cooldown_w)
-        if ability_cooldown_h and ability_cooldown_h.isdigit():
-            config.ABILITY_COOLDOWN_H = int(ability_cooldown_h)
 
         self.paintImage(event)
 
@@ -405,8 +319,6 @@ class WinGUI(QWidget):
         painter.setPen(pen)
         painter.drawRect(config.ABILITY_KEY_X, config.ABILITY_KEY_Y, 
                  config.ABILITY_KEY_W, config.ABILITY_KEY_H)
-        painter.drawRect(config.ABILITY_COOLDOWN_X, config.ABILITY_COOLDOWN_Y, 
-            config.ABILITY_COOLDOWN_W, config.ABILITY_COOLDOWN_H)
         painter.end()  # Add this line to end the painting process
 
         # Set the pixmap as the background of the canvas
@@ -418,7 +330,6 @@ class WinGUI(QWidget):
             self.canvas_hekili_zone.hide()  # Hide the canvas
             self.frame_hekili_zone.hide()  # Hide the frame
             self.frame_ability_key_zone.hide()
-            self.frame_ability_cooldown_zone.hide()
             self.setFixedSize(335, 50)
             self.showed = False
             self.buttonHiden.setText("展开")
@@ -427,7 +338,6 @@ class WinGUI(QWidget):
             self.canvas_hekili_zone.show()
             self.frame_hekili_zone.show()
             self.frame_ability_key_zone.show()
-            self.frame_ability_cooldown_zone.show()
             self.setFixedSize(335, 400)
             self.showed = True
             self.buttonHiden.setText("折叠")
