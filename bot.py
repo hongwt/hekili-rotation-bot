@@ -66,9 +66,9 @@ class WowBot:
             if screenshot is None:
                 continue
 
-            # screenshot = screenshot.convert('L')
             # 使用point方法应用这个函数
-            # screenshot = screenshot.point(self.to_white_or_black)
+            screenshot = screenshot.convert('L')
+            screenshot = screenshot.point(self.to_white_or_black)
             
             screenshot_np = np.array(screenshot)
             loop_time = time.time()
