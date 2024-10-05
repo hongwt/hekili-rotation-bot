@@ -15,7 +15,7 @@ class Vision:
     model_name = 'parseq'
 
     def __init__(self):
-        model_path = 'D:\\vs_project\\parseq\\last.ckpt'
+        model_path = 'parseq-onekey.ckpt'
         self._model =     model = load_from_checkpoint(model_path).eval().to('cpu').eval()
         self._preprocess = T.Compose([
             T.Resize((32, 128), T.InterpolationMode.BICUBIC),
