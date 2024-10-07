@@ -46,7 +46,10 @@ class WowBot:
         # time.sleep(delay)
         key = key.lower()  # Convert key to lowercase
         print(f'Casting ability {key} with cooldown {cooldown} seconds.')
-        pyautogui.press(key)
+        pyautogui.keyUp(key)
+        delay = random.uniform(0.001, 0.002)
+        time.sleep(delay)
+        pyautogui.keyDown(key)
 
 
     # 创建一个函数，将所有非黑色像素转换为白色
@@ -80,8 +83,6 @@ class WowBot:
                     self.press_ability_key(key, 0)
                 else:
                     screenshot.save(f'images/invalid_{key}_{time.time()}.png')
-            delay = random.uniform(0.05, 0.15)
-            time.sleep(delay)
 
     def start(self):
         self.stopped = False
