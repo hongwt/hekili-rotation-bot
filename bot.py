@@ -20,6 +20,8 @@ class WowBot:
 
     vision = None
 
+    pyautogui.PAUSE = 0.0
+
     def __init__(self):
         # create a thread lock object
         self.lock = Lock()
@@ -45,10 +47,10 @@ class WowBot:
         #     delay = random.uniform(0.2, 0.5)
         # time.sleep(delay)
         key = key.lower()  # Convert key to lowercase
-        print(f'Casting ability {key} with cooldown {cooldown} seconds.')
+        print(f'Casting ability {key}.')
         pyautogui.keyUp(key)
-        delay = random.uniform(0.001, 0.002)
-        time.sleep(delay)
+        # delay = random.uniform(0.01, 0.02)
+        # time.sleep(delay)
         pyautogui.keyDown(key)
 
 
@@ -62,24 +64,27 @@ class WowBot:
     
     def run(self):
         while not self.stopped:
+            loop_time = time.time()
+            print('begin loop: ', loop_time)
             screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
                                             config.HEKILI_Y, 
                                             config.HEKILI_X + config.HEKILI_W, 
                                             config.HEKILI_Y + config.HEKILI_H))
             if screenshot is None:
                 continue
-
             screenshot_np = np.array(screenshot)
-            
-            loop_time = time.time()
+            print('grab image: ', time.time())
+
             key_text = self.vision.get_ability_key(screenshot_np)
-            print(f'vision FPS {1 / (time.time() - loop_time)}')
             key = self.convert_to_key(key_text)
+            print('get key: ', time.time())
             if (key and key != ''):
                 if key in config.VALID_KEYS:
                     self.press_ability_key(key, 0)
+                    print('press key: ', time.time())
                 else:
                     screenshot.save(f'images/invalid_{key}_{time.time()}.png')
+            print(f'vision FPS {1 / (time.time() - loop_time)}')
 
     def start(self):
         self.stopped = False

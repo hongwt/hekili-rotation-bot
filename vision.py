@@ -15,7 +15,7 @@ class Vision:
 
     # properties
     model_name = 'parseq'
-    screenshot_cache = {}  # Initialize the screenshot cache as a list
+    image_cache = {}  # Initialize the image cache as a list
 
     def __init__(self):
         model_path = 'parseq-onekey.ckpt'
@@ -54,44 +54,30 @@ class Vision:
         # 技能按键区域
         ability_key_image = screenshot_np[config.ABILITY_KEY_Y:config.ABILITY_KEY_Y+config.ABILITY_KEY_H,
                                         config.ABILITY_KEY_X:config.ABILITY_KEY_X+config.ABILITY_KEY_W]
-        # 计算图像的哈希值
-        image_hash = hashlib.sha256(ability_key_image.tobytes()).hexdigest()
-        if image_hash in self.screenshot_cache:
-            return self.screenshot_cache[image_hash]  # Return the cached key_text
-
-        if len(self.screenshot_cache) > 100:
-            oldest_screenshot = next(iter(self.screenshot_cache))
-            del self.screenshot_cache[oldest_screenshot]  # Remove the oldest screenshot from the cache
 
         if ability_key_image.size == 0:
             print("技能按键区域图像为空，可能是配置的区域超出了原图的范围。")
             return ''
+            
+        # 计算图像的哈希值
+        image_hash = hashlib.sha256(ability_key_image.tobytes()).hexdigest()
+        if image_hash in self.image_cache:
+            return self.image_cache[image_hash]  # Return the cached key_text
+
+        if len(self.image_cache) > 100:
+            oldest_image = next(iter(self.image_cache))
+            del self.image_cache[oldest_image]  # Remove the oldest screenshot from the cache
+
         key_text = self.convertToText(ability_key_image)
         if (key_text == ''):
             return ''
 
-        self.screenshot_cache[image_hash] = key_text  # Add the screenshot and key_text to the cache
+        self.image_cache[image_hash] = key_text  # Add the screenshot and key_text to the cache
         if config.DEBUG:
-            screenshot = Image.fromarray(screenshot_np)
+            screenshot = Image.fromarray(ability_key_image)
             screenshot.save(f'images/valid_{key_text}_{time.time()}.png')
         
         return key_text
-
-    def get_ability_cooldown(self, screenshot_np):
-        # 技能冷却时间区域
-        ability_cooldown_image = screenshot_np[config.ABILITY_COOLDOWN_Y:config.ABILITY_COOLDOWN_Y+config.ABILITY_COOLDOWN_H,
-                                           config.ABILITY_COOLDOWN_X:config.ABILITY_COOLDOWN_X+config.ABILITY_COOLDOWN_W]
-        if ability_cooldown_image.size == 0:
-            print("技能冷却时间区域图像为空，可能是配置的区域超出了原图的范围。")
-            return
-        cooldown_text = self.convertToText(ability_cooldown_image)
-        # if config.DEBUG:
-        #     cv.imwrite('images/Cooldown_{}_{}.jpg'.format(cooldown_text, time.time()), ability_cooldown_image)
-
-        if cooldown_text and cooldown_text.isdigit() and int(cooldown_text) > 0 and int(cooldown_text) < 10:
-            return int(cooldown_text)
-        else:
-            return -1
 
 if __name__ == '__main__':
     vision = Vision()
