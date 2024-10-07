@@ -69,11 +69,8 @@ class WowBot:
             if screenshot is None:
                 continue
 
-            # 使用point方法应用这个函数
-            # screenshot = screenshot.convert('L')
-            # screenshot = screenshot.point(self.to_white_or_black)
-            
             screenshot_np = np.array(screenshot)
+            
             loop_time = time.time()
             key_text = self.vision.get_ability_key(screenshot_np)
             print(f'vision FPS {1 / (time.time() - loop_time)}')

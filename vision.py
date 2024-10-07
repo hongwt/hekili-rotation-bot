@@ -1,7 +1,9 @@
 import time
 import numpy as np
-from PIL import Image, ImageGrab
+import hashlib
 import torch
+
+from PIL import Image, ImageGrab
 from torchvision import transforms as T
 
 from strhub.data.module import SceneTextDataModule
@@ -13,6 +15,7 @@ class Vision:
 
     # properties
     model_name = 'parseq'
+    screenshot_cache = {}  # Initialize the screenshot cache as a list
 
     def __init__(self):
         model_path = 'D:\\vs_project\\parseq\\last.ckpt'
@@ -51,13 +54,27 @@ class Vision:
         # 技能按键区域
         ability_key_image = screenshot_np[config.ABILITY_KEY_Y:config.ABILITY_KEY_Y+config.ABILITY_KEY_H,
                                         config.ABILITY_KEY_X:config.ABILITY_KEY_X+config.ABILITY_KEY_W]
+        # 计算图像的哈希值
+        image_hash = hashlib.sha256(ability_key_image.tobytes()).hexdigest()
+        if image_hash in self.screenshot_cache:
+            return self.screenshot_cache[image_hash]  # Return the cached key_text
+
+        if len(self.screenshot_cache) > 100:
+            oldest_screenshot = next(iter(self.screenshot_cache))
+            del self.screenshot_cache[oldest_screenshot]  # Remove the oldest screenshot from the cache
+
         if ability_key_image.size == 0:
             print("技能按键区域图像为空，可能是配置的区域超出了原图的范围。")
             return ''
         key_text = self.convertToText(ability_key_image)
-        # if config.DEBUG:
-        #     cv.imwrite('images/Key_{}_{}.jpg'.format(key_text, time.time()), ability_key_image)
+        if (key_text == ''):
+            return ''
 
+        self.screenshot_cache[image_hash] = key_text  # Add the screenshot and key_text to the cache
+        if config.DEBUG:
+            screenshot = Image.fromarray(screenshot_np)
+            screenshot.save(f'images/valid_{key_text}_{time.time()}.png')
+        
         return key_text
 
     def get_ability_cooldown(self, screenshot_np):
