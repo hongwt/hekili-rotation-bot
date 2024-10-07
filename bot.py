@@ -46,7 +46,10 @@ class WowBot:
         # time.sleep(delay)
         key = key.lower()  # Convert key to lowercase
         print(f'Casting ability {key} with cooldown {cooldown} seconds.')
-        pyautogui.press(key)
+        pyautogui.keyUp(key)
+        delay = random.uniform(0.001, 0.002)
+        time.sleep(delay)
+        pyautogui.keyDown(key)
 
 
     # 创建一个函数，将所有非黑色像素转换为白色
@@ -66,11 +69,8 @@ class WowBot:
             if screenshot is None:
                 continue
 
-            # 使用point方法应用这个函数
-            # screenshot = screenshot.convert('L')
-            # screenshot = screenshot.point(self.to_white_or_black)
-            
             screenshot_np = np.array(screenshot)
+            
             loop_time = time.time()
             key_text = self.vision.get_ability_key(screenshot_np)
             print(f'vision FPS {1 / (time.time() - loop_time)}')
@@ -80,8 +80,6 @@ class WowBot:
                     self.press_ability_key(key, 0)
                 else:
                     screenshot.save(f'images/invalid_{key}_{time.time()}.png')
-            delay = random.uniform(0.05, 0.15)
-            time.sleep(delay)
 
     def start(self):
         self.stopped = False
