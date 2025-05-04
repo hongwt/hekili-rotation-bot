@@ -16,6 +16,13 @@
 
 ## Guide :blue_book:
 
+## 打包应用
+pyinstaller main.py，下列文件需要手工拷贝：
+1、config.ini拷贝到dist\main目录
+2、parseq-onekey.ckpt文件拷贝到dist\main\_internal
+3、pytorch_lightning库文件拷贝到dist\main\_internal（pyinstaller打包会漏掉这个Lib库）
+4、dist\main\_internal下新建images目录
+
 ## 启动游戏
 正常启动游戏，建议将游戏窗口最大化。
 ## 启动脚本程序
@@ -42,7 +49,7 @@
 
 ### Hints and issues
 1. 性能问题
-通过折叠按钮隐藏设置界面可以显著提高性能（40-60 FPS）。
+通过折叠按钮隐藏设置界面可以显著提高性能（10-30 FPS）。
  
 2. 技能识别错的问题
 技能偶尔识别错误，例如H、L，弹出任务框和PVP框，待改进。
