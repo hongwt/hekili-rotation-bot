@@ -23,7 +23,6 @@ config.read(config_file_path, encoding='utf-8')
 # 获取配置值
 DEBUG = config.getboolean('Global', 'DEBUG')
 
-WOW_WINDOW_NAME = config.get('Global', 'WOW_WINDOW_NAME')
 VALID_KEYS = config.get('Global', 'VALID_KEYS')
 
 HEKILI_X = config.getint('Hekili', 'HEKILI_X')
@@ -35,11 +34,6 @@ ABILITY_KEY_Y = config.getint('Hekili', 'ABILITY_KEY_Y')
 ABILITY_KEY_W = config.getint('Hekili', 'ABILITY_KEY_W')
 ABILITY_KEY_H = config.getint('Hekili', 'ABILITY_KEY_H')
 
-ABILITY_COOLDOWN_X = config.getint('Hekili', 'ABILITY_COOLDOWN_X')
-ABILITY_COOLDOWN_Y = config.getint('Hekili', 'ABILITY_COOLDOWN_Y')
-ABILITY_COOLDOWN_W = config.getint('Hekili', 'ABILITY_COOLDOWN_W')
-ABILITY_COOLDOWN_H = config.getint('Hekili', 'ABILITY_COOLDOWN_H')
-
 def save_config():
     """
     将当前配置变量的值保存到config.ini文件
@@ -47,7 +41,6 @@ def save_config():
     # 更新配置对象中的值
     # Global部分
     config['Global']['DEBUG'] = str(DEBUG)
-    config['Global']['WOW_WINDOW_NAME'] = WOW_WINDOW_NAME
     config['Global']['VALID_KEYS'] = VALID_KEYS
     
     # Hekili部分
@@ -60,11 +53,6 @@ def save_config():
     config['Hekili']['ABILITY_KEY_Y'] = str(ABILITY_KEY_Y)
     config['Hekili']['ABILITY_KEY_W'] = str(ABILITY_KEY_W)
     config['Hekili']['ABILITY_KEY_H'] = str(ABILITY_KEY_H)
-    
-    config['Hekili']['ABILITY_COOLDOWN_X'] = str(ABILITY_COOLDOWN_X)
-    config['Hekili']['ABILITY_COOLDOWN_Y'] = str(ABILITY_COOLDOWN_Y)
-    config['Hekili']['ABILITY_COOLDOWN_W'] = str(ABILITY_COOLDOWN_W)
-    config['Hekili']['ABILITY_COOLDOWN_H'] = str(ABILITY_COOLDOWN_H)
     
     # 将配置写入文件
     try:

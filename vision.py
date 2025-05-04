@@ -69,7 +69,7 @@ class Vision:
             del self.image_cache[oldest_image]  # Remove the oldest screenshot from the cache
 
         key_text = self.convertToText(ability_key_image)
-        if (key_text == '' or key_text == 'NA'):
+        if (key_text == ''):
             return ''
 
         self.image_cache[image_hash] = key_text  # Add the screenshot and key_text to the cache

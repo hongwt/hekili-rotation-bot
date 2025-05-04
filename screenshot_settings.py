@@ -12,9 +12,9 @@ from window_capture import WindowCapture
 import config
 
 class ScreenshotSettingsDialog(QDialog):
-    def __init__(self, parent=None, hwnd=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.hwnd = hwnd
+
         self.capture = None
         
         # 初始化界面
@@ -167,10 +167,6 @@ class ScreenshotSettingsDialog(QDialog):
     def captureNewArea(self):
         # 关闭更新定时器
         self.timer.stop()
-        
-        # 设置WoW窗口为前景
-        if self.hwnd:
-            win32gui.SetForegroundWindow(self.hwnd)
         
         # 暂时隐藏设置对话框
         self.hide()

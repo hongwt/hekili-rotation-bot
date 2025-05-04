@@ -7,12 +7,12 @@ import pyautogui
 
 from PIL import ImageGrab
 
-from PySide6.QtCore import Qt, QTimer, QPoint, QObject
+from PySide6.QtCore import Qt, QTimer, QPoint, QObject, Signal
 from PySide6.QtWidgets import (QWidget, QApplication, QLabel, 
-                              QVBoxLayout, QMenu, QDialog, QMessageBox)
+                              QVBoxLayout, QHBoxLayout, QMenu, QDialog, QMessageBox)
 from PySide6.QtGui import QPainter, QColor
 
-import win32gui
+from pynput import keyboard  # 添加pynput库以监听全局按键
 
 import config
 from vision import Vision
@@ -20,7 +20,9 @@ from screenshot_settings import ScreenshotSettingsDialog
 
 class WowBot(QObject):
     # 使用 QObject 作为基类以支持信号和槽
-    
+    # 添加按键检测信号
+    key_detected = Signal(str)
+
     def __init__(self):
         super().__init__()
         self.stopped = True
@@ -35,6 +37,8 @@ class WowBot(QObject):
 
     def convert_to_key(self, key_text):
         if not key_text:
+            return ''
+        if key_text == 'NA':
             return ''
         # drop all keys that are not in the valid keys list
         key_text = [key for key in key_text if (key >= '0' and key <= 'z')]
@@ -76,11 +80,12 @@ class WowBot(QObject):
             return
             
         screenshot_np = np.array(screenshot)
-        print('grab image: ', time.time())
 
         key_text = self.vision.get_ability_key(screenshot_np)
+        # 发送信号通知GUI更新按键显示
+        self.key_detected.emit(key_text)
+
         key = self.convert_to_key(key_text)
-        print('get key: ', time.time())
         
         if (key and key != ''):
             if key in config.VALID_KEYS:
@@ -105,14 +110,22 @@ class WowBot(QObject):
             self.timer.stop()
 
 class WinGUI(QWidget):
+    # 添加信号用于在非GUI线程中触发GUI操作
+    toggle_signal = Signal()
+    
     # properties
-    hwnd = None
     bot = None
     offset = None  # 用于窗口拖动
+    keyboard_listener = None  # 键盘监听器
+    alt_pressed = False  # 记录Alt键状态
 
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.setupKeyboardListener()
+        
+        # 连接信号到槽
+        self.toggle_signal.connect(self.startRotation)
 
     def initUI(self):
         # 设置窗口属性
@@ -120,24 +133,72 @@ class WinGUI(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFixedSize(250, 40)  # 减小高度，不再显示截图预览
-
-        # 获取WoW窗口句柄
-        self.hwnd = win32gui.FindWindow(None, config.WOW_WINDOW_NAME)
         
         # 创建Bot实例
         self.bot = WowBot()
+        # 连接bot的信号到更新按键显示的槽
+        self.bot.key_detected.connect(self.update_key_display)
 
         # 创建状态标签
-        self.status_label = QLabel("就绪", self)
+        self.status_label = QLabel("就绪 (Alt+X切换)", self)  # 更新标签文本提示快捷键
         self.status_label.setStyleSheet("color: #000000; font-size: 14px;")
         self.status_label.setAlignment(Qt.AlignCenter)
         
-        # 布局
-        layout = QVBoxLayout()
-        layout.addWidget(self.status_label)
-        layout.setContentsMargins(10, 10, 10, 10)
+        # 创建按键显示标签
+        self.key_label = QLabel("", self)
+        self.key_label.setStyleSheet("color: #FF0000; font-size: 16px; font-weight: bold;")
+        self.key_label.setAlignment(Qt.AlignCenter)
+        self.key_label.setMinimumWidth(40)
         
-        self.setLayout(layout)
+        # 布局
+        main_layout = QVBoxLayout()
+        
+        # 创建水平布局放置状态标签和按键标签
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(self.status_label)
+        h_layout.addWidget(self.key_label)
+        
+        main_layout.addLayout(h_layout)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        
+        self.setLayout(main_layout)
+
+    def setupKeyboardListener(self):
+        """设置键盘监听器"""
+        def on_press(key):
+            try:
+                if key in (keyboard.Key.alt_l, keyboard.Key.alt_r):
+                    self.alt_pressed = True
+                # 使用多种方式检测'x'键，包括直接字符串比较
+                elif ((hasattr(key, 'char') and key.char and key.char.lower() == 'x') or 
+                      str(key).strip("'") == "x"):
+                    if self.alt_pressed:
+                        # 使用信号在主线程中执行操作
+                        self.toggle_signal.emit()
+            except Exception as e:
+                # 捕获并记录所有异常以便于调试
+                print(f"按键监听器错误: {e}")
+        
+        def on_release(key):
+            try:
+                if key in (keyboard.Key.alt_l, keyboard.Key.alt_r):
+                    self.alt_pressed = False
+            except Exception as e:
+                print(f"按键释放错误: {e}")
+                
+            # 不需要返回False，让监听器继续运行
+        
+        # 启动键盘监听
+        self.keyboard_listener = keyboard.Listener(
+            on_press=on_press,
+            on_release=on_release)
+        self.keyboard_listener.start()
+
+    def closeEvent(self, event):
+        """关闭窗口时停止键盘监听"""
+        if self.keyboard_listener:
+            self.keyboard_listener.stop()
+        event.accept()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -178,33 +239,37 @@ class WinGUI(QWidget):
 
     def openScreenshotSettings(self):
         # 创建并显示设置对话框
-        settings_dialog = ScreenshotSettingsDialog(self, self.hwnd)
+        settings_dialog = ScreenshotSettingsDialog(self)
         settings_dialog.exec()
 
     def startRotation(self):
         if self.bot.stopped:
-            self.status_label.setText("正在运行...")
-            # 将窗口设置为前置
-            if self.hwnd:
-                win32gui.SetForegroundWindow(self.hwnd)
+            self.status_label.setText("正在运行... (Alt+X切换)")
             self.bot.start()
         else:
-            self.status_label.setText("已停止")
+            self.status_label.setText("已停止 (Alt+X切换)")
             self.bot.stop()
 
     def showAbout(self):
         QMessageBox.about(self, "关于", "Hekili Rotation Bot\n作者: Hongwt\n\n辅助魔兽世界Hekili插件使用")
 
     def paintEvent(self, event):
-        # 绘制半透明背景
         painter = QPainter(self)
+        # 开启反锯齿
         painter.setRenderHint(QPainter.Antialiasing)
         
         # 设置半透明白色背景
-        painter.setBrush(QColor(255, 255, 255, 180))
+        painter.setBrush(QColor(255, 255, 255, 120))
         painter.setPen(Qt.NoPen)
         painter.drawRoundedRect(self.rect(), 10, 10)
 
+    def update_key_display(self, key):
+        """更新按键显示标签"""
+        if key and key != '':
+            self.key_label.setText(key.upper())
+        else:
+            self.key_label.setText("")
+            
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
