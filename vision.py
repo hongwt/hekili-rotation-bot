@@ -73,7 +73,7 @@ class Vision:
             return ''
 
         self.image_cache[image_hash] = key_text  # Add the screenshot and key_text to the cache
-        if config.DEBUG:
+        if config.DEBUG and key_text != 'NA':
             screenshot = Image.fromarray(ability_key_image)
             screenshot.save(f'images/valid_{key_text}_{time.time()}.png')
         

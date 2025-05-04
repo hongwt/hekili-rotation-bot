@@ -49,8 +49,8 @@ class WowBot:
         key = key.lower()  # Convert key to lowercase
         print(f'Casting ability {key}.')
         pyautogui.keyUp(key)
-        # delay = random.uniform(0.01, 0.02)
-        # time.sleep(delay)
+        delay = random.uniform(0.01, 0.5)
+        time.sleep(delay)
         pyautogui.keyDown(key)
 
 
