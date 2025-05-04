@@ -1,368 +1,215 @@
 import os
+import time
+import random
 import multiprocessing
+import numpy as np
+import pyautogui
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen
-
-import win32gui
-from pynput import mouse
 from PIL import ImageGrab
 
-import config
-from windowcapture import WindowCapture
-from bot import WowBot
+from PySide6.QtCore import Qt, QTimer, QPoint, QObject
+from PySide6.QtWidgets import (QWidget, QApplication, QLabel, 
+                              QVBoxLayout, QMenu, QDialog, QMessageBox)
+from PySide6.QtGui import QPainter, QColor
 
-def list_window_names():
-    def winEnumHandler(hwnd, ctx):
-        if win32gui.IsWindowVisible(hwnd):
-            print(hex(hwnd), win32gui.GetWindowText(hwnd))
-    win32gui.EnumWindows(winEnumHandler, None)
+import win32gui
+
+import config
+from vision import Vision
+from screenshot_settings import ScreenshotSettingsDialog
+
+class WowBot(QObject):
+    # 使用 QObject 作为基类以支持信号和槽
+    
+    def __init__(self):
+        super().__init__()
+        self.stopped = True
+        self.vision = Vision()
+        
+        # 创建定时器替代线程
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.process_frame)
+        
+        # 设置pyautogui暂停时间
+        pyautogui.PAUSE = 0.0
+
+    def convert_to_key(self, key_text):
+        if not key_text:
+            return ''
+        # drop all keys that are not in the valid keys list
+        key_text = [key for key in key_text if (key >= '0' and key <= 'z')]
+        key_text = ''.join(key_text)
+        # add some special cases
+        if ("11" == key_text):
+            return '1'
+        if len(key_text) == 1:
+            return key_text[0]
+        else:
+            return ''
+        
+    def press_ability_key(self, key, cooldown):
+        key = key.lower()  # Convert key to lowercase
+        print(f'Casting ability {key}.')
+        pyautogui.keyUp(key)
+        delay = random.uniform(0.01, 0.5)
+        time.sleep(delay)
+        pyautogui.keyDown(key)
+
+    # 创建一个函数，将所有非黑色像素转换为白色
+    def to_white_or_black(self, value):
+        threshold = 1
+        if value < threshold:
+            return 0  # 返回黑色
+        else:
+            return 255  # 返回白色
+    
+    def process_frame(self):
+        """单次处理一帧图像，作为 QTimer 的槽函数"""
+        loop_time = time.time()
+        print('begin loop: ', loop_time)
+        
+        screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
+                                        config.HEKILI_Y, 
+                                        config.HEKILI_X + config.HEKILI_W, 
+                                        config.HEKILI_Y + config.HEKILI_H))
+        if screenshot is None:
+            return
+            
+        screenshot_np = np.array(screenshot)
+        print('grab image: ', time.time())
+
+        key_text = self.vision.get_ability_key(screenshot_np)
+        key = self.convert_to_key(key_text)
+        print('get key: ', time.time())
+        
+        if (key and key != ''):
+            if key in config.VALID_KEYS:
+                self.press_ability_key(key, 0)
+                print('press key: ', time.time())
+            else:
+                screenshot.save(f'images/invalid_{key}_{time.time()}.png')
+                
+        print(f'vision FPS {1 / (time.time() - loop_time)}')
+
+    def start(self):
+        """启动机器人"""
+        if self.stopped:
+            self.stopped = False
+            # 启动定时器，设置适当的间隔（毫秒）
+            self.timer.start(50)  # 每50毫秒执行一次，约等于20FPS
+
+    def stop(self):
+        """停止机器人"""
+        if not self.stopped:
+            self.stopped = True
+            self.timer.stop()
 
 class WinGUI(QWidget):
-
-    # threading properties
-    stopped = True
-    lock = None
-
     # properties
     hwnd = None
-    showed = True
     bot = None
+    offset = None  # 用于窗口拖动
 
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
+        # 设置窗口属性
         self.setWindowTitle("Hekili Bot")
-        self.setGeometry(300, 300, 335, 350)
-        self.setFixedSize(335, 400)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFixedSize(250, 40)  # 减小高度，不再显示截图预览
 
-        # find the handle for the window we want to capture.
-        # if no window name is given, capture the entire screen
+        # 获取WoW窗口句柄
         self.hwnd = win32gui.FindWindow(None, config.WOW_WINDOW_NAME)
-        self.capture = WindowCapture()
-        self.capture.closeEvent = self.handleWidgetClose
-
+        
+        # 创建Bot实例
         self.bot = WowBot()
 
-        # self.mouse_listener = mouse.Listener(on_click=self.on_mouse_event)
-        # self.mouse_listener.start()
-
-        self.canvas_hekili_zone = self.__create_canvas_hekili_zone(self)
-
-        self.frame_hekili_zone = self.__create_frame_hekili_zone(self)
-        self.label_hekili = self.__create_label_hekili(self.frame_hekili_zone)
+        # 创建状态标签
+        self.status_label = QLabel("就绪", self)
+        self.status_label.setStyleSheet("color: #000000; font-size: 14px;")
+        self.status_label.setAlignment(Qt.AlignCenter)
         
-        self.label_hekili_x = self.__create_label_hekili_x(self.frame_hekili_zone)
-        self.input_hekili_x = self.__create_input_hekili_x(self.frame_hekili_zone)
-        self.label_hekili_y = self.__create_label_hekili_y(self.frame_hekili_zone)
-        self.input_hekili_y = self.__create_input_hekili_y(self.frame_hekili_zone)
-        self.label_hekili_w = self.__create_label_hekili_w(self.frame_hekili_zone)
-        self.input_hekili_w = self.__create_input_hekili_w(self.frame_hekili_zone)
-        self.label_hekili_h = self.__create_label_hekili_h(self.frame_hekili_zone)
-        self.input_hekili_h = self.__create_input_hekili_h(self.frame_hekili_zone)
-
-        self.frame_ability_key_zone = self.__create_frame_ability_key_zone(self)
-        self.label_ability_key = self.__create_label_ability_key(self.frame_ability_key_zone)
-        self.label_ability_key_x = self.__create_label_ability_key_x(self.frame_ability_key_zone)
-        self.input_ability_key_x = self.__create_input_ability_key_x(self.frame_ability_key_zone)
-        self.label_ability_key_y = self.__create_label_ability_key_y(self.frame_ability_key_zone)
-        self.input_ability_key_y = self.__create_input_ability_key_y(self.frame_ability_key_zone)
-        self.label_ability_key_w = self.__create_label_ability_key_w(self.frame_ability_key_zone)
-        self.input_ability_key_w = self.__create_input_ability_key_w(self.frame_ability_key_zone)
-        self.label_ability_key_h = self.__create_label_ability_key_h(self.frame_ability_key_zone)
-        self.input_ability_key_h = self.__create_input_ability_key_h(self.frame_ability_key_zone)
-
-        # 设置默认值
-        self.input_hekili_x.setText(str(config.HEKILI_X))
-        self.input_hekili_y.setText(str(config.HEKILI_Y))
-        self.input_hekili_w.setText(str(config.HEKILI_W))
-        self.input_hekili_h.setText(str(config.HEKILI_H))
-
-        self.input_ability_key_x.setText(str(config.ABILITY_KEY_X))
-        self.input_ability_key_y.setText(str(config.ABILITY_KEY_Y))
-        self.input_ability_key_w.setText(str(config.ABILITY_KEY_W))
-        self.input_ability_key_h.setText(str(config.ABILITY_KEY_H))
-
-        # 添加按钮
-        self.buttonSetZone = QPushButton("设置截图区域")
-        self.buttonSetZone.setFixedHeight(35)
-        self.buttonSetZone.clicked.connect(self.setHekiliZone)
-
-        self.buttonFrame = QFrame(self)
-        self.buttonFrame.setGeometry(10, 225, 315, 35)
-        self.buttonFrame.setFixedHeight(35)
-
-        # 创建水平布局
-        layout = QHBoxLayout(self.buttonFrame)
-        layout.setContentsMargins(0, 0, 0, 0)  # 设置布局的边距
-
-        self.buttonStart = QPushButton("开始", self.buttonFrame)
-        self.buttonStart.setFixedHeight(35)
-        self.buttonStart.clicked.connect(self.startRotation)
-        layout.addWidget(self.buttonStart)  # 将按钮添加到布局中
-
-        self.buttonHiden = QPushButton("折叠", self.buttonFrame)
-        self.buttonHiden.setFixedHeight(35)
-        self.buttonHiden.clicked.connect(self.hideWindow)
-        layout.addWidget(self.buttonHiden)  # 将按钮添加到布局中
-
-        # 设置布局到按钮框架
-        self.buttonFrame.setLayout(layout)
-
-        # 添加布局到主布局
+        # 布局
         layout = QVBoxLayout()
-        layout.addWidget(self.buttonSetZone)
-        layout.addWidget(self.canvas_hekili_zone)
-        layout.addWidget(self.frame_hekili_zone)
-        layout.addWidget(self.frame_ability_key_zone)
-        layout.addWidget(self.buttonFrame)
-
+        layout.addWidget(self.status_label)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
         self.setLayout(layout)
 
-    def __create_canvas_hekili_zone(self, parent):
-        canvas = QLabel(parent)
-        canvas.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        canvas.setStyleSheet("background-color: #aaa;")
-        canvas.setGeometry(10, 100, 315, 120)
-        canvas.setFixedHeight(120)
-        return canvas
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.offset = event.position().toPoint()
+        elif event.button() == Qt.RightButton:
+            self.showContextMenu(event.globalPosition().toPoint())
 
-    def __create_frame_hekili_zone(self, parent):
-        frame = QFrame(parent)
-        frame.setGeometry(10, 225, 315, 35)
-        frame.setFixedHeight(35)
-        return frame
+    def mouseMoveEvent(self, event):
+        if self.offset is not None and event.buttons() == Qt.LeftButton:
+            self.move(event.globalPosition().toPoint() - self.offset)
 
-    def __create_label_hekili(self, parent):
-        label = QLabel("Hekili区域：", parent)
-        label.setGeometry(0, 2, 80, 30)
-        return label
+    def mouseReleaseEvent(self, event):
+        self.offset = None
 
-    def __create_label_hekili_x(self, parent):
-        label = QLabel("X", parent)
-        label.setGeometry(70, 2, 20, 30)
-        return label
-
-    def __create_input_hekili_x(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setReadOnly(True)
-        ipt.setStyleSheet("background-color: #eee;")
-        ipt.setGeometry(88, 2, 40, 30)
-        return ipt
-
-    def __create_label_hekili_y(self, parent):
-        label = QLabel("Y", parent)
-        label.setGeometry(130, 2, 20, 30)
-        return label
-
-    def __create_input_hekili_y(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setReadOnly(True)
-        ipt.setStyleSheet("background-color: #eee;")
-        ipt.setGeometry(148, 2, 40, 30)
-        return ipt
-
-    def __create_label_hekili_w(self, parent):
-        label = QLabel("W", parent)
-        label.setGeometry(190, 2, 20, 30)
-        return label
-
-    def __create_input_hekili_w(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setReadOnly(True)
-        ipt.setStyleSheet("background-color: #eee;")
-        ipt.setGeometry(208, 2, 40, 30)
-        return ipt
-
-    def __create_label_hekili_h(self, parent):
-        label = QLabel("H", parent)
-        label.setGeometry(250, 2, 20, 30)
-        return label
-
-    def __create_input_hekili_h(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setReadOnly(True)
-        ipt.setStyleSheet("background-color: #eee;")
-        ipt.setGeometry(268, 2, 40, 30)
-        return ipt
-
-    def __create_frame_ability_key_zone(self, parent):
-        frame = QFrame(parent)
-        frame.setGeometry(10, 275, 315, 35)
-        frame.setFixedHeight(35)
-        return frame
-
-    def __create_label_ability_key(self, parent):
-        label = QLabel("按键区域：", parent)
-        label.setGeometry(0, 2, 80, 30)
-        return label
-
-    def __create_label_ability_key_x(self, parent):
-        label = QLabel("X", parent)
-        label.setGeometry(70, 2, 30, 30)
-        return label
-
-    def __create_input_ability_key_x(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(88, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def __create_label_ability_key_y(self, parent):
-        label = QLabel("Y", parent)
-        label.setGeometry(130, 2, 30, 30)
-        return label
-
-    def __create_input_ability_key_y(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(148, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def __create_label_ability_key_w(self, parent):
-        label = QLabel("W", parent)
-        label.setGeometry(190, 2, 30, 30)
-        return label
-
-    def __create_input_ability_key_w(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(208, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def __create_label_ability_key_h(self, parent):
-        label = QLabel("H", parent)
-        label.setGeometry(250, 2, 30, 30)
-        return label
-
-    def __create_input_ability_key_h(self, parent):
-        ipt = QLineEdit(parent)
-        ipt.setGeometry(268, 2, 40, 30)
-        ipt.textChanged.connect(self.handleInputChanged)
-        return ipt
-
-    def setHekiliZone(self):
-        # 将窗口设置为前置
-        if self.hwnd:
-            win32gui.SetForegroundWindow(self.hwnd)
-        # 调用 ScreenshotWidget 并获取截图区域
-        self.capture.show()
-
-    def handleInputChanged(self, event):
-        ability_key_x = self.input_ability_key_x.text()
-        ability_key_y = self.input_ability_key_y.text()
-        ability_key_w = self.input_ability_key_w.text()
-        ability_key_h = self.input_ability_key_h.text()
-
-        if ability_key_x and ability_key_x.isdigit():
-            config.ABILITY_KEY_X = int(ability_key_x)
-        if ability_key_y and ability_key_y.isdigit():
-            config.ABILITY_KEY_Y = int(ability_key_y)
-        if ability_key_w and ability_key_w.isdigit():
-            config.ABILITY_KEY_W = int(ability_key_w)
-        if ability_key_h and ability_key_h.isdigit():
-            config.ABILITY_KEY_H = int(ability_key_h)
-
-        self.paintImage(event)
-
-    def handleWidgetClose(self, event):
-        x1, y1, x2, y2 = int(self.capture.x1), int(self.capture.y1), int(self.capture.x2), int(self.capture.y2)
-        print(x1, y1, x2, y2)
-
-        x = x1
-        y = y1
-        width = x2 - x1
-        height = y2 - y1
-        print(x, y, width, height)
-
-        self.input_hekili_x.setText(str(x))
-        self.input_hekili_y.setText(str(y))
-        self.input_hekili_w.setText(str(width))
-        self.input_hekili_h.setText(str(height))
-
-        config.HEKILI_X = x
-        config.HEKILI_Y = y
-        config.HEKILI_W = width
-        config.HEKILI_H = height
-
-        self.paintImage(event)
-
-    def paintEvent(self, event):
-        # Add code here to switch windows
-        if self.showed:
-            self.paintImage(event)
-
-    # def on_mouse_event(self, x, y, button, pressed):
-    #     # print(f"Mouse event: {button} {'pressed' if pressed else 'released'} at ({x}, {y})")
-    #     if button == mouse.Button.x2 and pressed:
-    #         self.startRotation()
-    #     elif button == mouse.Button.x1 and pressed:
-    #         self.hideWindow()
-
-    def paintImage(self, event):
-        screenshot = ImageGrab.grab(bbox=(config.HEKILI_X, 
-                                            config.HEKILI_Y, 
-                                            config.HEKILI_X + config.HEKILI_W, 
-                                            config.HEKILI_Y + config.HEKILI_H))
-        # 将截图转换为 QImage 对象
-        qt_image = QImage(screenshot.tobytes(), screenshot.width, screenshot.height, screenshot.width * 3, QImage.Format_RGB888)
-        # Convert qt_image to QPixmap
-        pixmap = QPixmap.fromImage(qt_image)
-        # 绘制矩形框
-        painter = QPainter(pixmap)
-        pen = QPen(Qt.red)
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawRect(config.ABILITY_KEY_X, config.ABILITY_KEY_Y, 
-                 config.ABILITY_KEY_W, config.ABILITY_KEY_H)
-        painter.end()  # Add this line to end the painting process
-
-        # Set the pixmap as the background of the canvas
-        self.canvas_hekili_zone.setPixmap(pixmap)
-
-    def hideWindow(self):
-        if self.showed:
-            self.buttonSetZone.hide()
-            self.canvas_hekili_zone.hide()  # Hide the canvas
-            self.frame_hekili_zone.hide()  # Hide the frame
-            self.frame_ability_key_zone.hide()
-            self.setFixedSize(335, 50)
-            self.showed = False
-            self.buttonHiden.setText("展开")
+    def showContextMenu(self, pos):
+        menu = QMenu(self)
+        
+        settings_action = menu.addAction("设置截图区域")
+        
+        if self.bot.stopped:
+            start_action = menu.addAction("开始")
         else:
-            self.buttonSetZone.show()
-            self.canvas_hekili_zone.show()
-            self.frame_hekili_zone.show()
-            self.frame_ability_key_zone.show()
-            self.setFixedSize(335, 400)
-            self.showed = True
-            self.buttonHiden.setText("折叠")
+            start_action = menu.addAction("结束")
+        
+        about_action = menu.addAction("关于")
+        exit_action = menu.addAction("退出")
+        
+        action = menu.exec(pos)
+        
+        if action == settings_action:
+            self.openScreenshotSettings()
+        elif action == start_action:
+            self.startRotation()
+        elif action == about_action:
+            self.showAbout()
+        elif action == exit_action:
+            self.close()
+
+    def openScreenshotSettings(self):
+        # 创建并显示设置对话框
+        settings_dialog = ScreenshotSettingsDialog(self, self.hwnd)
+        settings_dialog.exec()
 
     def startRotation(self):
-        if (self.bot.stopped):
-            print("开始...")
+        if self.bot.stopped:
+            self.status_label.setText("正在运行...")
             # 将窗口设置为前置
             if self.hwnd:
                 win32gui.SetForegroundWindow(self.hwnd)
             self.bot.start()
-            self.buttonStart.setText("结束")
         else:
-            print("结束...")
+            self.status_label.setText("已停止")
             self.bot.stop()
-            self.buttonStart.setText("开始")
+
+    def showAbout(self):
+        QMessageBox.about(self, "关于", "Hekili Rotation Bot\n作者: Hongwt\n\n辅助魔兽世界Hekili插件使用")
+
+    def paintEvent(self, event):
+        # 绘制半透明背景
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # 设置半透明白色背景
+        painter.setBrush(QColor(255, 255, 255, 180))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(self.rect(), 10, 10)
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    list_window_names()
 
     app = QApplication([])
     win = WinGUI()
-    win.setWindowOpacity(0.9)  # 设置窗口为半透明
-    win.setWindowFlags(win.windowFlags() | Qt.WindowStaysOnTopHint)  # 将窗口设置为总是在最前面
     win.show()
-    app.exec_()
+    app.exec()
