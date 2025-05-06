@@ -88,6 +88,9 @@ class WowBot(QObject):
         key = self.convert_to_key(key_text)
         
         if (key and key != ''):
+            # Replace S with 5
+            if key.upper() == 'S':
+                key = '5'
             if key in config.VALID_KEYS:
                 self.press_ability_key(key, 0)
                 print('press key: ', time.time())
@@ -259,7 +262,7 @@ class WinGUI(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         
         # 设置半透明白色背景
-        painter.setBrush(QColor(255, 255, 255, 120))
+        painter.setBrush(QColor(255, 255, 255, 100))
         painter.setPen(Qt.NoPen)
         painter.drawRoundedRect(self.rect(), 10, 10)
 

@@ -5,4 +5,4 @@ nltk
 numpy
 pyautogui
 tkinter
-PyQt5
+PySide6
