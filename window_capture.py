@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QPainter, QPen, QColor, QFont
 from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtGui import QGuiApplication
 
 class WindowCapture(QWidget):
 
@@ -12,6 +13,9 @@ class WindowCapture(QWidget):
         self.begin = None
         self.end = None
         self.show_help = True  # 是否显示帮助信息
+        
+        # 获取屏幕缩放比例
+        self.device_pixel_ratio = QGuiApplication.primaryScreen().devicePixelRatio()
         
         # 设置窗口属性
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
@@ -41,8 +45,8 @@ class WindowCapture(QWidget):
  
     def mouseReleaseEvent(self, event):
         # 获取坐标
-        self.x1, self.y1 = int(self.begin.x()), int(self.begin.y())
-        self.x2, self.y2 = int(self.end.x()), int(self.end.y())
+        self.x1, self.y1 = int(self.begin.x() * self.device_pixel_ratio), int(self.begin.y() * self.device_pixel_ratio)
+        self.x2, self.y2 = int(self.end.x() * self.device_pixel_ratio), int(self.end.y() * self.device_pixel_ratio)
         
         # 确保x1,y1是左上角点，x2,y2是右下角点
         if self.x1 > self.x2:
@@ -86,9 +90,14 @@ class WindowCapture(QWidget):
         painter.drawRect(x, y, w, h)
         
         # 显示选择尺寸
-        size_text = f"{int(w)} × {int(h)}"
-        painter.setFont(QFont("Arial", 10))
-        painter.setPen(QColor(255, 255, 255))
+        x_phys = int(x * self.device_pixel_ratio)
+        y_phys = int(y * self.device_pixel_ratio)
+        w_phys = int(w * self.device_pixel_ratio)
+        h_phys = int(h * self.device_pixel_ratio)
+        
+        size_text = f"{x_phys}:{y_phys} {w_phys} × {h_phys}"
+        painter.setFont(QFont("Arial", 10, QFont.Bold))
+        painter.setPen(QColor(255, 0, 0))
         
         # 计算文本位置，确保显示在屏幕内
         text_x = x + 5
