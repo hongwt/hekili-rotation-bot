@@ -25,6 +25,8 @@ DEBUG = config.getboolean('Global', 'DEBUG')
 
 VALID_KEYS = config.get('Global', 'VALID_KEYS')
 
+HOTKEY = config.get('Global', 'hotkey')
+
 HEKILI_X = config.getint('Hekili', 'HEKILI_X')
 HEKILI_Y = config.getint('Hekili', 'HEKILI_Y')
 HEKILI_W = config.getint('Hekili', 'HEKILI_W')
@@ -42,6 +44,7 @@ def save_config():
     # Global部分
     config['Global']['DEBUG'] = str(DEBUG)
     config['Global']['VALID_KEYS'] = VALID_KEYS
+    config['Global']['HOTKEY'] = HOTKEY
     
     # Hekili部分
     config['Hekili']['HEKILI_X'] = str(HEKILI_X)

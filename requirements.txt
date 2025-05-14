@@ -6,3 +6,4 @@ numpy
 pyautogui
 tkinter
 PySide6
+system_hotkey

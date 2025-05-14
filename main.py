@@ -15,6 +15,7 @@ from PySide6.QtGui import QPainter, QColor
 from pynput import keyboard  # 添加pynput库以监听全局按键
 
 import config
+from system_hotkey import SystemHotkey
 from vision import Vision
 from screenshot_settings import ScreenshotSettingsDialog
 
@@ -113,22 +114,23 @@ class WowBot(QObject):
             self.timer.stop()
 
 class WinGUI(QWidget):
-    # 添加信号用于在非GUI线程中触发GUI操作
-    toggle_signal = Signal()
-    
     # properties
     bot = None
     offset = None  # 用于窗口拖动
-    keyboard_listener = None  # 键盘监听器
-    alt_pressed = False  # 记录Alt键状态
+    hk = SystemHotkey()
+
+    # 添加信号，用于线程间通信
+    hotkey_pressed = Signal()
 
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.setupKeyboardListener()
+
+        hotkey_tuple = tuple(config.HOTKEY.split(','))
+        self.hk.register(hotkey_tuple, callback=self.onHotkeyPressed)
         
-        # 连接信号到槽
-        self.toggle_signal.connect(self.startRotation)
+        # 将信号连接到在主线程执行的槽函数
+        self.hotkey_pressed.connect(self.startRotation)
 
     def initUI(self):
         # 设置窗口属性
@@ -143,7 +145,7 @@ class WinGUI(QWidget):
         self.bot.key_detected.connect(self.update_key_display)
 
         # 创建状态标签
-        self.status_label = QLabel("就绪 (Alt+X切换)", self)  # 更新标签文本提示快捷键
+        self.status_label = QLabel("就绪 (" + config.HOTKEY + "切换)", self)  # 更新标签文本提示快捷键
         self.status_label.setStyleSheet("color: #000000; font-size: 14px;")
         self.status_label.setAlignment(Qt.AlignCenter)
         
@@ -166,41 +168,7 @@ class WinGUI(QWidget):
         
         self.setLayout(main_layout)
 
-    def setupKeyboardListener(self):
-        """设置键盘监听器"""
-        def on_press(key):
-            try:
-                if key in (keyboard.Key.alt_l, keyboard.Key.alt_r):
-                    self.alt_pressed = True
-                # 使用多种方式检测'x'键，包括直接字符串比较
-                elif ((hasattr(key, 'char') and key.char and key.char.lower() == 'x') or 
-                      str(key).strip("'") == "x"):
-                    if self.alt_pressed:
-                        # 使用信号在主线程中执行操作
-                        self.toggle_signal.emit()
-            except Exception as e:
-                # 捕获并记录所有异常以便于调试
-                print(f"按键监听器错误: {e}")
-        
-        def on_release(key):
-            try:
-                if key in (keyboard.Key.alt_l, keyboard.Key.alt_r):
-                    self.alt_pressed = False
-            except Exception as e:
-                print(f"按键释放错误: {e}")
-                
-            # 不需要返回False，让监听器继续运行
-        
-        # 启动键盘监听
-        self.keyboard_listener = keyboard.Listener(
-            on_press=on_press,
-            on_release=on_release)
-        self.keyboard_listener.start()
-
     def closeEvent(self, event):
-        """关闭窗口时停止键盘监听"""
-        if self.keyboard_listener:
-            self.keyboard_listener.stop()
         event.accept()
 
     def mousePressEvent(self, event):
@@ -245,16 +213,21 @@ class WinGUI(QWidget):
         settings_dialog = ScreenshotSettingsDialog(self)
         settings_dialog.exec()
 
+    def onHotkeyPressed(self, event=None):
+        """热键回调函数，仅发射信号"""
+        self.hotkey_pressed.emit()
+        
     def startRotation(self):
+        """在主线程中执行的槽函数"""
         if self.bot.stopped:
-            self.status_label.setText("正在运行... (Alt+X切换)")
+            self.status_label.setText("正在运行... (" + config.HOTKEY + "切换)")
             self.bot.start()
         else:
-            self.status_label.setText("已停止 (Alt+X切换)")
+            self.status_label.setText("已停止 (" + config.HOTKEY + "切换)")
             self.bot.stop()
 
     def showAbout(self):
-        QMessageBox.about(self, "关于", "Hekili Rotation Bot\n作者: Hongwt\n\n辅助魔兽世界Hekili插件使用")
+        QMessageBox.about(self, "关于", "Hekili Ro  tation Bot\n作者: Hongwt\n\n辅助魔兽世界Hekili插件使用")
 
     def paintEvent(self, event):
         painter = QPainter(self)
