@@ -35,6 +35,69 @@ class WowBot(QObject):
         
         # 设置pyautogui暂停时间
         pyautogui.PAUSE = 0.0
+        
+        # 添加人工按键检测相关属性
+        self.manual_key_pressed = False
+        self.manual_key_time = 0
+        self.manual_key_cooldown = 1.0  # 人工按键后停止自动按键的时间（秒）
+        self.last_auto_key = ''
+        self.last_auto_key_time = 0
+        
+        # 启动键盘监听器
+        self.keyboard_listener = keyboard.Listener(
+            on_press=self.on_key_press,
+            on_release=self.on_key_release
+        )
+        self.keyboard_listener.start()
+
+    def on_key_press(self, key):
+        """监听键盘按下事件"""
+        try:
+            # 获取按键字符
+            if hasattr(key, 'char') and key.char:
+                key_char = key.char.lower()
+            elif hasattr(key, 'name'):
+                # 处理特殊键
+                if key.name.isdigit():
+                    key_char = key.name
+                else:
+                    return
+            else:
+                return
+            
+            # 检查是否是有效的游戏按键
+            if key_char in [k.lower() for k in config.MANUAL_KEYS]:
+                current_time = time.time()
+                
+                # 判断是否为人工按键（非自动按键触发的）
+                # 如果距离上次自动按键时间很短且按键相同，则认为是自动按键的回响
+                if (self.last_auto_key.lower() == key_char and 
+                    current_time - self.last_auto_key_time < 0.1):
+                    return
+                
+                # 标记为人工按键
+                self.manual_key_pressed = True
+                self.manual_key_time = current_time
+                print(f"检测到人工按键: {key_char}")
+                
+        except Exception as e:
+            pass  # 忽略按键监听错误
+
+    def on_key_release(self, key):
+        """监听键盘释放事件"""
+        pass
+
+    def is_manual_key_active(self):
+        """检查是否在人工按键冷却期内"""
+        if not self.manual_key_pressed:
+            return False
+        
+        current_time = time.time()
+        if current_time - self.manual_key_time > self.manual_key_cooldown:
+            self.manual_key_pressed = False
+            return False
+        
+        return True
 
     def convert_to_key(self, key_text):
         if not key_text:
@@ -53,12 +116,29 @@ class WowBot(QObject):
             return ''
         
     def press_ability_key(self, key, cooldown):
+        # 检查是否在人工按键冷却期内
+        if self.is_manual_key_active():
+            print(f"人工按键冷却期内，跳过自动按键: {key}")
+            return
+            
         key = key.lower()  # Convert key to lowercase
         print(f'Casting ability {key}.')
+        
+        # 记录自动按键信息
+        self.last_auto_key = key
+        self.last_auto_key_time = time.time()
+        
         pyautogui.keyUp(key)
         delay = random.uniform(0.01, 0.5)
         time.sleep(delay)
         pyautogui.keyDown(key)
+        
+        # 如果按键在WITH_CLICK_KEYS中，则额外点击一次鼠标
+        if key in [k.lower() for k in config.WITH_CLICK_KEYS]:
+            print(f'Additional mouse click for key {key}')
+            # 添加一个小延迟确保按键先执行
+            time.sleep(0.05)
+            pyautogui.click()    
 
     # 创建一个函数，将所有非黑色像素转换为白色
     def to_white_or_black(self, value):
@@ -113,6 +193,11 @@ class WowBot(QObject):
             self.stopped = True
             self.timer.stop()
 
+    def __del__(self):
+        """析构函数，确保键盘监听器被正确关闭"""
+        if hasattr(self, 'keyboard_listener'):
+            self.keyboard_listener.stop()
+
 class WinGUI(QWidget):
     # properties
     bot = None
@@ -137,7 +222,7 @@ class WinGUI(QWidget):
         self.setWindowTitle("Hekili Bot")
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(250, 40)  # 减小高度，不再显示截图预览
+        self.setFixedSize(250, 50)  # 增加高度以显示状态信息
         
         # 创建Bot实例
         self.bot = WowBot()
@@ -146,7 +231,7 @@ class WinGUI(QWidget):
 
         # 创建状态标签
         self.status_label = QLabel("就绪 (" + config.HOTKEY + "切换)", self)  # 更新标签文本提示快捷键
-        self.status_label.setStyleSheet("color: #000000; font-size: 14px;")
+        self.status_label.setStyleSheet("color: #000000; font-size: 12px;")
         self.status_label.setAlignment(Qt.AlignCenter)
         
         # 创建按键显示标签
@@ -154,6 +239,11 @@ class WinGUI(QWidget):
         self.key_label.setStyleSheet("color: #FF0000; font-size: 16px; font-weight: bold;")
         self.key_label.setAlignment(Qt.AlignCenter)
         self.key_label.setMinimumWidth(40)
+        
+        # 创建人工按键状态标签
+        self.manual_status_label = QLabel("", self)
+        self.manual_status_label.setStyleSheet("color: #0000FF; font-size: 10px;")
+        self.manual_status_label.setAlignment(Qt.AlignCenter)
         
         # 布局
         main_layout = QVBoxLayout()
@@ -164,13 +254,33 @@ class WinGUI(QWidget):
         h_layout.addWidget(self.key_label)
         
         main_layout.addLayout(h_layout)
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.addWidget(self.manual_status_label)
+        main_layout.setContentsMargins(10, 5, 10, 5)
         
         self.setLayout(main_layout)
+        
+        # 添加定时器更新人工按键状态显示
+        self.status_timer = QTimer()
+        self.status_timer.timeout.connect(self.update_manual_status)
+        self.status_timer.start(100)  # 每100ms更新一次状态
+
+    def update_manual_status(self):
+        """更新人工按键状态显示"""
+        if self.bot and self.bot.is_manual_key_active():
+            remaining_time = self.bot.manual_key_cooldown - (time.time() - self.bot.manual_key_time)
+            self.manual_status_label.setText(f"人工按键冷却: {remaining_time:.1f}s")
+        else:
+            self.manual_status_label.setText("")
 
     def closeEvent(self, event):
+        # 清理资源
+        if self.bot:
+            self.bot.stop()
+            if hasattr(self.bot, 'keyboard_listener'):
+                self.bot.keyboard_listener.stop()
         event.accept()
 
+    # ...existing code...
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.offset = event.position().toPoint()
@@ -227,7 +337,7 @@ class WinGUI(QWidget):
             self.bot.stop()
 
     def showAbout(self):
-        QMessageBox.about(self, "关于", "Hekili Ro  tation Bot\n作者: Hongwt\n\n辅助魔兽世界Hekili插件使用")
+        QMessageBox.about(self, "关于", "Hekili Rotation Bot\n作者: Hongwt\n\n辅助魔兽世界Hekili插件使用\n\n支持人工按键优先级")
 
     def paintEvent(self, event):
         painter = QPainter(self)
