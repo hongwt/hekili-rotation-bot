@@ -129,7 +129,7 @@ class WowBot(QObject):
         self.last_auto_key_time = time.time()
         
         pyautogui.keyUp(key)
-        delay = random.uniform(0.01, 0.5)
+        delay = random.uniform(0.01, 0.2)
         time.sleep(delay)
         pyautogui.keyDown(key)
         
