@@ -39,7 +39,7 @@ class WowBot(QObject):
         # 添加人工按键检测相关属性
         self.manual_key_pressed = False
         self.manual_key_time = 0
-        self.manual_key_cooldown = 1.0  # 人工按键后停止自动按键的时间（秒）
+        self.manual_key_cooldown = 0.5  # 人工按键后停止自动按键的时间（秒）
         self.last_auto_key = ''
         self.last_auto_key_time = 0
         
@@ -129,15 +129,13 @@ class WowBot(QObject):
         self.last_auto_key_time = time.time()
         
         pyautogui.keyUp(key)
-        delay = random.uniform(0.01, 0.2)
+        delay = random.uniform(0.01, 0.1)
         time.sleep(delay)
         pyautogui.keyDown(key)
         
         # 如果按键在WITH_CLICK_KEYS中，则额外点击一次鼠标
         if key in [k.lower() for k in config.WITH_CLICK_KEYS]:
             print(f'Additional mouse click for key {key}')
-            # 添加一个小延迟确保按键先执行
-            time.sleep(0.05)
             pyautogui.click()    
 
     # 创建一个函数，将所有非黑色像素转换为白色
