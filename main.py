@@ -99,21 +99,41 @@ class WowBot(QObject):
         
         return True
 
-    def convert_to_key(self, key_text):
-        if not key_text:
+    def convert_to_key(self, key_text: str) -> str:
+        """
+        将识别到的文本转换为有效的按键字符
+        
+        Args:
+            key_text: 从图像识别得到的文本
+            
+        Returns:
+            转换后的按键字符，如果无效则返回空字符串
+        """
+        # 处理空值和特殊标记
+        if not key_text or key_text == 'NA':
             return ''
-        if key_text == 'NA':
+        
+        # 过滤无效字符：只保留数字0-9和字母a-z
+        filtered_chars = [char for char in key_text if char.isalnum() and ('0' <= char <= '9' or 'a' <= char.lower() <= 'z')]
+        filtered_text = ''.join(filtered_chars)
+        
+        if not filtered_text:
             return ''
-        # drop all keys that are not in the valid keys list
-        key_text = [key for key in key_text if (key >= '0' and key <= 'z')]
-        key_text = ''.join(key_text)
-        # add some special cases
-        if ("11" == key_text):
-            return '1'
-        if len(key_text) == 1:
-            return key_text[0]
-        else:
-            return ''
+        
+        # 特殊情况映射
+        special_mappings = {
+            '11': '1',  # 双1识别为1
+            'S': '5',   # S识别为5
+            'D': '0'    # D识别为0
+        }
+        
+        # 检查特殊映射
+        upper_text = filtered_text.upper()
+        if upper_text in special_mappings:
+            return special_mappings[upper_text]
+        
+        # 只返回单个字符
+        return filtered_text[0] if len(filtered_text) == 1 else ''
         
     def press_ability_key(self, key, cooldown):
         # 检查是否在人工按键冷却期内
@@ -162,12 +182,6 @@ class WowBot(QObject):
         key = self.convert_to_key(key_text)
         
         if (key and key != ''):
-            # Replace S with 5
-            if key.upper() == 'S':
-                key = '5'
-            # Replace D with 0
-            if key.upper() == 'D':
-                key = '0'
             if key in config.VALID_KEYS:
                 self.press_ability_key(key, 0)
                 print('press key: ', time.time())
