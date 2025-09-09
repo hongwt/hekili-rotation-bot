@@ -165,6 +165,9 @@ class WowBot(QObject):
             # Replace S with 5
             if key.upper() == 'S':
                 key = '5'
+            # Replace D with 0
+            if key.upper() == 'D':
+                key = '0'
             if key in config.VALID_KEYS:
                 self.press_ability_key(key, 0)
                 print('press key: ', time.time())
