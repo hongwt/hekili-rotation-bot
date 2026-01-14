@@ -37,11 +37,13 @@ class Vision:
             if config.DEBUG:
                 print(f'raw output: {predicted_char} (confidence: {confidence:.2f})')
             
-            # 如果置信度大于等于 0.8，返回预测字符
-            if confidence < 0.7 and config.DEBUG:
-                screenshot = Image.fromarray(image)
-                image_path = os.path.join(config.application_path, 'images', f'LowConfidence_{predicted_char}_{time.time()}.png')
-                screenshot.save(image_path)
+            # 如果置信度小于阈值，返回空字符
+            if confidence < config.CONFIDENCE_THRESHOLD:
+                if config.DEBUG and confidence > 0.2:
+                    screenshot = Image.fromarray(image)
+                    image_path = os.path.join(config.application_path, 'images', f'LowConfidence_{predicted_char}_{time.time()}.png')
+                    screenshot.save(image_path)
+                return ''
             return predicted_char
         except Exception as e:
             if config.DEBUG:

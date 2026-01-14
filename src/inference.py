@@ -15,6 +15,7 @@ import numpy as np
 from model import create_model
 from dataset import label_to_char
 
+
 class CharacterPredictor:
     """
     Wrapper class for character recognition inference.
@@ -52,7 +53,7 @@ class CharacterPredictor:
             raise FileNotFoundError(f"Checkpoint not found: {self.checkpoint_path}")
         
         # Create model
-        model = create_model(num_classes=37, dropout_rate=0.4)
+        model = create_model(num_classes=36, dropout_rate=0.4)
         
         # Load weights
         checkpoint = torch.load(self.checkpoint_path, map_location=self.device)

@@ -189,7 +189,7 @@ if __name__ == '__main__':
     
     # Dummy data
     batch_size = 8
-    num_classes = 37
+    num_classes = 36
     pred = torch.randn(batch_size, num_classes)
     target = torch.randint(0, num_classes, (batch_size,))
     

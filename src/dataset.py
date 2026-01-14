@@ -14,24 +14,20 @@ from PIL import Image
 import numpy as np
 
 
-# Label mapping: 0-9 -> '0'-'9', 10-35 -> 'A'-'Z', 36 -> 'NA'
+# Label mapping: 0-9 -> '0'-'9', 10-35 -> 'A'-'Z' (36 classes total)
 def label_to_char(label: int) -> str:
     """Convert integer label to character."""
     if 0 <= label <= 9:
         return str(label)
     elif 10 <= label <= 35:
         return chr(ord('A') + label - 10)
-    elif label == 36:
-        return 'NA'
     else:
         raise ValueError(f"Invalid label: {label}")
 
 
 def char_to_label(char: str) -> int:
     """Convert character to integer label."""
-    if char == 'NA':
-        return 36
-    elif char.isdigit():
+    if char.isdigit():
         return int(char)
     elif char.isalpha() and len(char) == 1:
         return ord(char.upper()) - ord('A') + 10
@@ -54,7 +50,6 @@ class PixelDataset(Dataset):
             B/
             ...
             Z/
-            NA/
     """
     
     def __init__(

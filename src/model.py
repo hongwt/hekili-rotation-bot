@@ -100,11 +100,11 @@ class PixelNet(nn.Module):
         - ResBlock 2: 128->256 channels, stride=2 -> (B, 256, 12, 12)
         - Attention: SE Block
         - Global Average Pooling -> (B, 256)
-        - FC layers (256->128->37)
-        - Output: (B, 37)
+        - FC layers (256->128->36)
+        - Output: (B, 36)
     """
     
-    def __init__(self, num_classes: int = 37, dropout_rate: float = 0.3):
+    def __init__(self, num_classes: int = 36, dropout_rate: float = 0.3):
         super(PixelNet, self).__init__()
         
         # Simplified initial convolution (single layer instead of two)
@@ -165,7 +165,7 @@ class PixelNet(nn.Module):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
 
-def create_model(num_classes: int = 37, dropout_rate: float = 0.3) -> PixelNet:
+def create_model(num_classes: int = 36, dropout_rate: float = 0.3) -> PixelNet:
     """
     Factory function to create PixelNet model.
     
@@ -189,5 +189,5 @@ if __name__ == '__main__':
     output = model(dummy_input)
     print(f"Input shape: {dummy_input.shape}")
     print(f"Output shape: {output.shape}")
-    assert output.shape == (4, 37), f"Expected (4, 37), got {output.shape}"
+    assert output.shape == (4, 36), f"Expected (4, 36), got {output.shape}"
     print("✓ PixelNet test passed\n")
