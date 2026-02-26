@@ -15,7 +15,6 @@ import numpy as np
 from model import create_model
 from dataset import label_to_char
 
-
 class CharacterPredictor:
     """
     Wrapper class for character recognition inference.
@@ -211,9 +210,17 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default='auto',
                         choices=['auto', 'cuda', 'cpu'],
                         help='Device to use')
+    parser.add_argument('--visualize', action='store_true',
+                        help='Visualize layer outputs in TensorBoard')
+    parser.add_argument('--log-dir', type=str, default='./logs/layer_visualization',
+                        help='Directory to save visualization logs')
     
     args = parser.parse_args()
     
+    # Create predictor
+    predictor = CharacterPredictor(args.checkpoint, args.device)
+    
     # Run prediction
-    char, confidence = predict(args.checkpoint, args.image, args.device)
+    char, confidence = predictor.predict(args.image, return_confidence=True)
     print(f"\nPrediction: '{char}' (confidence: {confidence:.4f})")
+    
